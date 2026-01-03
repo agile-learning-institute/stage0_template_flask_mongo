@@ -98,16 +98,25 @@ class TestTestRunService(unittest.TestCase):
         self.assertEqual(call_args[1]["set_data"]["name"], "Updated Test Run")
     
     @patch('src.services.testrun_service.MongoIO.get_instance')
-    def test_update_testrun_prevent_id_update(self, mock_get_instance):
-        """Test update_testrun raises HTTPForbidden when trying to update _id."""
-        # Arrange
+    def test_update_testrun_prevent_restricted_fields(self, mock_get_instance):
+        """Test update_testrun raises HTTPForbidden when trying to update restricted fields."""
+        # Test _id
         data = {"_id": "999", "name": "Updated"}
-        
-        # Act & Assert
         with self.assertRaises(HTTPForbidden) as context:
             TestRunService.update_testrun("123", data, self.mock_token, self.mock_breadcrumb)
-        
         self.assertIn("_id", str(context.exception))
+        
+        # Test created
+        data = {"created": {"at_time": "2024-01-01T00:00:00Z"}, "name": "Updated"}
+        with self.assertRaises(HTTPForbidden) as context:
+            TestRunService.update_testrun("123", data, self.mock_token, self.mock_breadcrumb)
+        self.assertIn("created", str(context.exception))
+        
+        # Test saved
+        data = {"saved": {"at_time": "2024-01-01T00:00:00Z"}, "name": "Updated"}
+        with self.assertRaises(HTTPForbidden) as context:
+            TestRunService.update_testrun("123", data, self.mock_token, self.mock_breadcrumb)
+        self.assertIn("saved", str(context.exception))
     
     @patch('src.services.testrun_service.MongoIO.get_instance')
     def test_update_testrun_no_permission(self, mock_get_instance):

@@ -52,14 +52,13 @@ class TestRunService:
             data: Dictionary of fields to update
             
         Raises:
-            HTTPForbidden: If update data contains _id or other restricted fields
+            HTTPForbidden: If update data contains restricted fields
         """
-        # Prevent updates to _id
-        if '_id' in data:
-            raise HTTPForbidden("Cannot update _id field")
-        
-        # Additional security checks can be added here
-        # For example, prevent updates to certain system fields
+        # Prevent updates to _id and system-managed fields
+        restricted_fields = ['_id', 'created', 'saved']
+        for field in restricted_fields:
+            if field in data:
+                raise HTTPForbidden(f"Cannot update {field} field")
     
     @staticmethod
     def create_testrun(data, token, breadcrumb):
@@ -69,7 +68,7 @@ class TestRunService:
         Args:
             data: Dictionary containing test run data
             token: Token dictionary with user_id and roles
-            breadcrumb: Breadcrumb dictionary for logging
+            breadcrumb: Breadcrumb dictionary for logging (contains at_time, by_user, from_ip, correlation_id)
             
         Returns:
             str: The ID of the created test run
@@ -80,6 +79,19 @@ class TestRunService:
             # Remove _id if present (MongoDB will generate it)
             if '_id' in data:
                 del data['_id']
+            
+            # Build breadcrumb object for created/saved fields (schema expects Registry, not from_ip)
+            breadcrumb_obj = {
+                "Registry": breadcrumb.get('from_ip', ''),
+                "at_time": breadcrumb.get('at_time'),
+                "by_user": breadcrumb.get('by_user'),
+                "correlation_id": breadcrumb.get('correlation_id')
+            }
+            
+            # Automatically populate required fields: created and saved
+            # These are system-managed and should not be provided by the client
+            data['created'] = breadcrumb_obj
+            data['saved'] = breadcrumb_obj
             
             mongo = MongoIO.get_instance()
             testrun_id = mongo.create_document(TestRunService.COLLECTION_NAME, data)
@@ -166,8 +178,18 @@ class TestRunService:
             TestRunService._check_permission(token, 'update')
             TestRunService._validate_update_data(data)
             
-            # Build update data with $set operator
-            set_data = {k: v for k, v in data.items() if k != '_id'}
+            # Build update data with $set operator (excluding restricted fields)
+            restricted_fields = ['_id', 'created', 'saved']
+            set_data = {k: v for k, v in data.items() if k not in restricted_fields}
+            
+            # Automatically update the 'saved' field with current breadcrumb (system-managed)
+            breadcrumb_obj = {
+                "Registry": breadcrumb.get('from_ip', ''),
+                "at_time": breadcrumb.get('at_time'),
+                "by_user": breadcrumb.get('by_user'),
+                "correlation_id": breadcrumb.get('correlation_id')
+            }
+            set_data['saved'] = breadcrumb_obj
             
             mongo = MongoIO.get_instance()
             updated = mongo.update_document(

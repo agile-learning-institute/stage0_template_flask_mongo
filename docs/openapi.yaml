@@ -408,8 +408,8 @@ paths:
                 $ref: '#/components/schemas/Error'
         '403':
           description: |
-            Forbidden - Either insufficient permissions (requires admin or developer role)
-            or attempting to update the `_id` field
+            Forbidden - Either insufficient permissions (requires admin role)
+            or attempting to update restricted fields (_id, created, saved)
           content:
             application/json:
               schema:
@@ -450,54 +450,264 @@ components:
 
     Grade:
       type: object
-      description: Grade document
+      description: Human and LLM Generated Classifications for Grading Purposes
+      additionalProperties: false
+      required:
+        - _id
+        - run_id
+        - video_id
+        - replies
       properties:
         _id:
           type: string
-          description: MongoDB ObjectId
+          description: Mongo Document Identifier
+          pattern: '^[0-9a-fA-F]{24}$'
           example: 507f1f77bcf86cd799439011
-        name:
+        run_id:
           type: string
-          description: Grade name
-          example: Grade A
-        description:
+          description: The _id of the TestRun this grade is associated with.
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: 507f1f77bcf86cd799439011
+        video_id:
           type: string
-          description: Grade description
-          example: Excellent performance
+          description: Youtube Video Identifier
+          pattern: '^[^\s]{1,40}$'
+          example: dQw4w9WgXcQ
+        replies:
+          type: array
+          description: Comment classifications
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - comment
+              - human_sentiment
+            properties:
+              comment:
+                type: string
+                description: The comment text
+                maxLength: 4096
+                example: "Great video! Really enjoyed it."
+              completed:
+                type: string
+                format: date-time
+                description: When the LLM categorization was completed
+                example: "2024-01-15T10:30:00Z"
+              human_sentiment:
+                type: object
+                description: Human Rated Sentiments
+                additionalProperties: false
+                required:
+                  - general
+                  - emotional
+                properties:
+                  general:
+                    type: string
+                    description: General Sentiment Classification
+                    enum:
+                      - negative
+                      - neutral
+                      - positive
+                    example: positive
+                  emotional:
+                    type: string
+                    description: Emotional Sentiment Classification
+                    enum:
+                      - anger
+                      - joy
+                      - sarcasm
+                    example: joy
+              llm_sentiment:
+                type: object
+                description: LLM Rated Sentiments
+                additionalProperties: false
+                properties:
+                  general:
+                    type: string
+                    description: General Sentiment Classification
+                    enum:
+                      - negative
+                      - neutral
+                      - positive
+                    example: positive
+                  emotional:
+                    type: string
+                    description: Emotional Sentiment Classification
+                    enum:
+                      - anger
+                      - joy
+                      - sarcasm
+                    example: joy
+              start:
+                type: string
+                format: date-time
+                description: When the LLM categorization began
+                example: "2024-01-15T10:29:00Z"
 
     TestRun:
       type: object
-      description: TestRun document
+      description: A test run that generates EvaluatorGrades from EvaluatorTestData
+      additionalProperties: false
+      required:
+        - _id
+        - name
+        - status
+        - created
+        - saved
+        - prompt_id
+        - prompt_name
       properties:
         _id:
           type: string
-          description: MongoDB ObjectId
+          description: Mongo ID for the document
+          pattern: '^[0-9a-fA-F]{24}$'
           example: 507f1f77bcf86cd799439011
         name:
           type: string
-          description: Test run name
+          description: A Name assigned to the run
+          pattern: '^[^\s]{1,40}$'
           example: Test Run 1
         status:
           type: string
-          description: Test run status
-          example: pending
+          description: Job Status
           enum:
-            - pending
+            - aborted
+            - cancelled
+            - complete
             - running
-            - completed
-            - failed
+            - scheduled
+          example: scheduled
         description:
           type: string
-          description: Test run description
+          description: Run Description
+          pattern: '^[^\t\n]{0,255}$'
           example: Initial test run for validation
-        created_at:
+        prompt_id:
+          type: string
+          description: The prompt ID of the prompt used by the test run
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: 507f1f77bcf86cd799439012
+        prompt_name:
+          type: string
+          description: The name of the prompt used
+          pattern: '^[^\s]{1,40}$'
+          example: sentiment-analysis-v1
+        model:
+          type: string
+          description: The ollama model name used by the test run
+          enum:
+            - deepseek-r1:70b
+            - gpt-oss:120b
+            - gpt-oss:20b
+            - nemotron-3-nano:30b
+            - qwen3-coder:30b
+          example: deepseek-r1:70b
+        created:
+          type: object
+          description: When was the job created
+          additionalProperties: false
+          required:
+            - Registry
+            - by_user
+            - at_time
+            - correlation_id
+          properties:
+            Registry:
+              type: string
+              format: ip
+              description: Http Request remote IP address
+              example: 192.168.1.1
+            at_time:
+              type: string
+              format: date-time
+              description: The date-time when last updated
+              example: "2024-01-15T10:00:00Z"
+            by_user:
+              type: string
+              description: ID Of User
+              pattern: '^[^\s]{1,40}$'
+              example: user-123
+            correlation_id:
+              type: string
+              description: The logging correlation ID of the update transaction
+              pattern: '^[^\s]{1,40}$'
+              example: corr-abc123
+        saved:
+          type: object
+          description: When was the job last updated
+          additionalProperties: false
+          required:
+            - Registry
+            - by_user
+            - at_time
+            - correlation_id
+          properties:
+            Registry:
+              type: string
+              format: ip
+              description: Http Request remote IP address
+              example: 192.168.1.1
+            at_time:
+              type: string
+              format: date-time
+              description: The date-time when last updated
+              example: "2024-01-15T10:05:00Z"
+            by_user:
+              type: string
+              description: ID Of User
+              pattern: '^[^\s]{1,40}$'
+              example: user-123
+            correlation_id:
+              type: string
+              description: The logging correlation ID of the update transaction
+              pattern: '^[^\s]{1,40}$'
+              example: corr-abc123
+        started:
           type: string
           format: date-time
-          description: Creation timestamp
-        updated_at:
+          description: When the job was started
+          example: "2024-01-15T10:10:00Z"
+        completed:
           type: string
           format: date-time
-          description: Last update timestamp
+          description: When was the run completed
+          example: "2024-01-15T11:00:00Z"
+        grades:
+          type: array
+          description: ID's of Individual Evaluator Grade files
+          items:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            description: Array item
+          example:
+            - 507f1f77bcf86cd799439013
+            - 507f1f77bcf86cd799439014
+        test_data:
+          type: object
+          description: Information about the Test Data for this run
+          additionalProperties: false
+          properties:
+            selected:
+              type: number
+              description: Number of documents selected at start time
+              minimum: 0
+              multipleOf: 1
+              example: 100
+            processed:
+              type: number
+              description: Number of documents that have been processed
+              minimum: 0
+              multipleOf: 1
+              example: 95
+            tags:
+              type: array
+              description: The tags used to selected test data documents
+              items:
+                type: string
+                pattern: '^[^\s]{1,40}$'
+              example:
+                - youtube
+                - comments
 
     TestRunInput:
       type: object
@@ -505,41 +715,140 @@ components:
       properties:
         name:
           type: string
-          description: Test run name
+          description: A Name assigned to the run
+          pattern: '^[^\s]{1,40}$'
           example: Test Run 1
         status:
           type: string
-          description: Test run status
-          example: pending
+          description: Job Status
           enum:
-            - pending
+            - aborted
+            - cancelled
+            - complete
             - running
-            - completed
-            - failed
+            - scheduled
+          example: scheduled
         description:
           type: string
-          description: Test run description
+          description: Run Description
+          pattern: '^[^\t\n]{0,255}$'
           example: Initial test run for validation
+        prompt_id:
+          type: string
+          description: The prompt ID of the prompt used by the test run
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: 507f1f77bcf86cd799439012
+        prompt_name:
+          type: string
+          description: The name of the prompt used
+          pattern: '^[^\s]{1,40}$'
+          example: sentiment-analysis-v1
+        model:
+          type: string
+          description: The ollama model name used by the test run
+          enum:
+            - deepseek-r1:70b
+            - gpt-oss:120b
+            - gpt-oss:20b
+            - nemotron-3-nano:30b
+            - qwen3-coder:30b
+          example: deepseek-r1:70b
+        test_data:
+          type: object
+          description: Information about the Test Data for this run
+          additionalProperties: false
+          properties:
+            selected:
+              type: number
+              description: Number of documents selected at start time
+              minimum: 0
+              multipleOf: 1
+            processed:
+              type: number
+              description: Number of documents that have been processed
+              minimum: 0
+              multipleOf: 1
+            tags:
+              type: array
+              description: The tags used to selected test data documents
+              items:
+                type: string
+                pattern: '^[^\s]{1,40}$'
 
     TestRunUpdate:
       type: object
-      description: Fields to update in a test run (cannot include _id)
+      description: Fields to update in a test run (cannot include _id, created, saved)
       properties:
         name:
           type: string
-          description: Test run name
+          description: A Name assigned to the run
+          pattern: '^[^\s]{1,40}$'
           example: Updated Test Run
         status:
           type: string
-          description: Test run status
-          example: completed
+          description: Job Status
           enum:
-            - pending
+            - aborted
+            - cancelled
+            - complete
             - running
-            - completed
-            - failed
+            - scheduled
+          example: complete
         description:
           type: string
-          description: Test run description
+          description: Run Description
+          pattern: '^[^\t\n]{0,255}$'
           example: Updated description
+        prompt_id:
+          type: string
+          description: The prompt ID of the prompt used by the test run
+          pattern: '^[0-9a-fA-F]{24}$'
+        prompt_name:
+          type: string
+          description: The name of the prompt used
+          pattern: '^[^\s]{1,40}$'
+        model:
+          type: string
+          description: The ollama model name used by the test run
+          enum:
+            - deepseek-r1:70b
+            - gpt-oss:120b
+            - gpt-oss:20b
+            - nemotron-3-nano:30b
+            - qwen3-coder:30b
+        started:
+          type: string
+          format: date-time
+          description: When the job was started
+        completed:
+          type: string
+          format: date-time
+          description: When was the run completed
+        grades:
+          type: array
+          description: ID's of Individual Evaluator Grade files
+          items:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+        test_data:
+          type: object
+          description: Information about the Test Data for this run
+          additionalProperties: false
+          properties:
+            selected:
+              type: number
+              description: Number of documents selected at start time
+              minimum: 0
+              multipleOf: 1
+            processed:
+              type: number
+              description: Number of documents that have been processed
+              minimum: 0
+              multipleOf: 1
+            tags:
+              type: array
+              description: The tags used to selected test data documents
+              items:
+                type: string
+                pattern: '^[^\s]{1,40}$'
 
