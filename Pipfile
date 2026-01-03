@@ -8,7 +8,7 @@ flask = "*"
 pymongo = "*"
 prometheus-flask-exporter = "*"
 pyjwt = "*"
-api-utils = {editable = true, git = "git+ssh://git@github.com/agile-crafts-people/api_utils.git"}
+api-utils = {editable = true, path = "../api_utils"}
 
 [dev-packages]
 pytest = "*"
@@ -25,7 +25,7 @@ test = "sh -c 'PYTHONPATH=. pytest test/ -v -m \"not e2e\"'"
 e2e = "sh -c 'PYTHONPATH=. pytest test/ -m e2e -v'"
 lint = "black --check src test"
 format = "black src test"
-db = "docker-compose up -d mongodb"
+db = "docker-compose down && docker-compose up -d mongodb"
 
 [requires]
 python_version = "3.12"

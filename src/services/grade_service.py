@@ -4,7 +4,7 @@ Grade service for business logic and RBAC.
 Handles RBAC checks and MongoDB operations for Grade domain.
 """
 from py_utils import MongoIO
-from py_utils.flask_utils.exceptions import HTTPForbidden, HTTPInternalServerError
+from py_utils.flask_utils.exceptions import HTTPNotFound, HTTPInternalServerError
 import logging
 
 logger = logging.getLogger(__name__)
@@ -22,28 +22,21 @@ class GradeService:
     
     COLLECTION_NAME = "Grade"
     
-    def __init__(self):
-        """Initialize the GradeService."""
-        self.mongo = MongoIO.get_instance()
-    
-    def _check_permission(self, token, operation):
+    @staticmethod
+    def _check_permission(token, operation):
         """
         Check if the user has permission to perform an operation.
         
         Args:
             token: Token dictionary with user_id and roles
             operation: The operation being performed (e.g., 'read', 'write')
-            
-        Raises:
-            HTTPForbidden: If user doesn't have required permission
+        
+        Note: Grade service only requires a valid token (authentication only).
         """
-        roles = token.get('roles', [])
-        # Simple RBAC: allow read operations for any authenticated user
-        # In production, implement more sophisticated role-based checks
-        if operation == 'read' and not roles:
-            raise HTTPForbidden("Insufficient permissions to read grades")
+        pass
     
-    def get_grades(self, token, breadcrumb):
+    @staticmethod
+    def get_grades(token, breadcrumb):
         """
         Retrieve all grades.
         
@@ -55,18 +48,17 @@ class GradeService:
             list: List of all grade documents
         """
         try:
-            self._check_permission(token, 'read')
-            
-            grades = self.mongo.get_documents(self.COLLECTION_NAME)
+            GradeService._check_permission(token, 'read')
+            mongo = MongoIO.get_instance()
+            grades = mongo.get_documents(GradeService.COLLECTION_NAME)
             logger.info(f"Retrieved {len(grades)} grades for user {token.get('user_id')}")
             return grades
-        except HTTPForbidden:
-            raise
         except Exception as e:
             logger.error(f"Error retrieving grades: {str(e)}")
             raise HTTPInternalServerError("Failed to retrieve grades")
     
-    def get_grade(self, grade_id, token, breadcrumb):
+    @staticmethod
+    def get_grade(grade_id, token, breadcrumb):
         """
         Retrieve a specific grade by ID.
         
@@ -76,18 +68,22 @@ class GradeService:
             breadcrumb: Breadcrumb dictionary for logging
             
         Returns:
-            dict or None: The grade document if found, None otherwise
+            dict: The grade document
+            
+        Raises:
+            HTTPNotFound: If grade is not found
         """
         try:
-            self._check_permission(token, 'read')
+            GradeService._check_permission(token, 'read')
             
-            grade = self.mongo.get_document(self.COLLECTION_NAME, grade_id)
-            if grade:
-                logger.info(f"Retrieved grade {grade_id} for user {token.get('user_id')}")
-            else:
-                logger.info(f"Grade {grade_id} not found for user {token.get('user_id')}")
+            mongo = MongoIO.get_instance()
+            grade = mongo.get_document(GradeService.COLLECTION_NAME, grade_id)
+            if grade is None:
+                raise HTTPNotFound(f"Grade {grade_id} not found")
+            
+            logger.info(f"Retrieved grade {grade_id} for user {token.get('user_id')}")
             return grade
-        except HTTPForbidden:
+        except HTTPNotFound:
             raise
         except Exception as e:
             logger.error(f"Error retrieving grade {grade_id}: {str(e)}")

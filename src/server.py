@@ -31,7 +31,6 @@ config.set_versions(mongo.get_documents(config.VERSIONS_COLLECTION_NAME))
 
 import logging
 logger = logging.getLogger(__name__)
-logger.info("============= Starting Flask MongoDB API Template Server ===============")
 
 # Initialize Flask App
 from py_utils import MongoJSONEncoder
@@ -43,28 +42,28 @@ app.json = MongoJSONEncoder(app)
 # Apply Prometheus monitoring middleware - exposes /metrics endpoint (default)
 metrics = PrometheusMetrics(app)
 
-# Register Config Routes
+# Register Routes
+logger.info("Registering Routes")
+
 from py_utils import create_config_routes
 app.register_blueprint(create_config_routes(), url_prefix='/api/config')
+logger.info("  /api/config")
 
-# Register Dev Login Routes (only if enabled)
 if config.ENABLE_LOGIN:
     from py_utils import create_dev_login_routes
     app.register_blueprint(create_dev_login_routes())
-    logger.info("Dev login endpoint: /dev-login")
+    logger.info("  /dev-login")
 
-# Register Domain Routes
 from src.routes.grade_routes import create_grade_routes
 app.register_blueprint(create_grade_routes(), url_prefix='/api/grade')
+logger.info("  /api/grade")
 
 from src.routes.testrun_routes import create_testrun_routes
 app.register_blueprint(create_testrun_routes(), url_prefix='/api/testrun')
+logger.info("  /api/testrun")
 
-logger.info("============= Routes Registered ===============")
-logger.info(f"Config endpoint: /api/config")
-logger.info(f"Prometheus metrics endpoint: /metrics")
-logger.info(f"Grade endpoints: /api/grade")
-logger.info(f"TestRun endpoints: /api/testrun")
+logger.info("  /metrics")
+logger.info("Routes Registered")
 
 # Define a signal handler for SIGTERM and SIGINT
 def handle_exit(signum, frame):
@@ -89,7 +88,7 @@ signal.signal(signal.SIGINT, handle_exit)
 
 # Expose app for Gunicorn or direct execution
 if __name__ == "__main__":
-    api_port = config.EVALUATOR_API_PORT if hasattr(config, 'EVALUATOR_API_PORT') and config.EVALUATOR_API_PORT else 8184
+    api_port = config.EVALUATOR_API_PORT
     logger.info(f"Starting Flask server on port {api_port}")
     app.run(host="0.0.0.0", port=api_port, debug=False)
 

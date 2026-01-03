@@ -25,7 +25,6 @@ def create_testrun_routes():
         Blueprint: Flask Blueprint with testrun routes
     """
     testrun_routes = Blueprint('testrun_routes', __name__)
-    service = TestRunService()
     
     @testrun_routes.route('', methods=['POST'])
     @handle_route_exceptions
@@ -45,12 +44,12 @@ def create_testrun_routes():
         """
         token = create_flask_token()
         breadcrumb = create_flask_breadcrumb(token)
-        logger.info(f"create_testrun Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
         
         data = request.get_json() or {}
-        testrun_id = service.create_testrun(data, token, breadcrumb)
-        testrun = service.get_testrun(testrun_id, token, breadcrumb)
+        testrun_id = TestRunService.create_testrun(data, token, breadcrumb)
+        testrun = TestRunService.get_testrun(testrun_id, token, breadcrumb)
         
+        logger.info(f"create_testrun Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
         return jsonify(testrun), 201
     
     @testrun_routes.route('', methods=['GET'])
@@ -64,9 +63,9 @@ def create_testrun_routes():
         """
         token = create_flask_token()
         breadcrumb = create_flask_breadcrumb(token)
-        logger.info(f"get_testruns Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
         
-        testruns = service.get_testruns(token, breadcrumb)
+        testruns = TestRunService.get_testruns(token, breadcrumb)
+        logger.info(f"get_testruns Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
         return jsonify(testruns), 200
     
     @testrun_routes.route('/<testrun_id>', methods=['GET'])
@@ -83,12 +82,9 @@ def create_testrun_routes():
         """
         token = create_flask_token()
         breadcrumb = create_flask_breadcrumb(token)
+        
+        testrun = TestRunService.get_testrun(testrun_id, token, breadcrumb)
         logger.info(f"get_testrun Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
-        
-        testrun = service.get_testrun(testrun_id, token, breadcrumb)
-        if testrun is None:
-            return jsonify({"error": "TestRun not found"}), 404
-        
         return jsonify(testrun), 200
     
     @testrun_routes.route('/<testrun_id>', methods=['PATCH'])
@@ -112,14 +108,11 @@ def create_testrun_routes():
         """
         token = create_flask_token()
         breadcrumb = create_flask_breadcrumb(token)
-        logger.info(f"update_testrun Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
         
         data = request.get_json() or {}
-        testrun = service.update_testrun(testrun_id, data, token, breadcrumb)
+        testrun = TestRunService.update_testrun(testrun_id, data, token, breadcrumb)
         
-        if testrun is None:
-            return jsonify({"error": "TestRun not found"}), 404
-        
+        logger.info(f"update_testrun Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
         return jsonify(testrun), 200
     
     logger.info("TestRun Flask Routes Registered")

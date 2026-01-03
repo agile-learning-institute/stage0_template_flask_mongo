@@ -4,7 +4,7 @@ Unit tests for TestRun service.
 import unittest
 from unittest.mock import patch, MagicMock
 from src.services.testrun_service import TestRunService
-from py_utils.flask_utils.exceptions import HTTPForbidden, HTTPInternalServerError
+from py_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound, HTTPInternalServerError
 
 
 class TestTestRunService(unittest.TestCase):
@@ -23,11 +23,10 @@ class TestTestRunService(unittest.TestCase):
         mock_mongo.create_document.return_value = "123"
         mock_get_instance.return_value = mock_mongo
         
-        service = TestRunService()
         data = {"name": "Test Run 1", "status": "pending"}
         
         # Act
-        testrun_id = service.create_testrun(data, self.mock_token, self.mock_breadcrumb)
+        testrun_id = TestRunService.create_testrun(data, self.mock_token, self.mock_breadcrumb)
         
         # Assert
         self.assertEqual(testrun_id, "123")
@@ -35,14 +34,13 @@ class TestTestRunService(unittest.TestCase):
     
     @patch('src.services.testrun_service.MongoIO.get_instance')
     def test_create_testrun_no_permission(self, mock_get_instance):
-        """Test create_testrun raises HTTPForbidden when user lacks permission."""
+        """Test create_testrun raises HTTPForbidden when user lacks admin role."""
         # Arrange
-        mock_token_no_permission = {"user_id": "test_user", "roles": ["viewer"]}
+        mock_token_no_permission = {"user_id": "test_user", "roles": ["developer"]}
         
         # Act & Assert
-        service = TestRunService()
         with self.assertRaises(HTTPForbidden):
-            service.create_testrun({"name": "Test"}, mock_token_no_permission, self.mock_breadcrumb)
+            TestRunService.create_testrun({"name": "Test"}, mock_token_no_permission, self.mock_breadcrumb)
     
     @patch('src.services.testrun_service.MongoIO.get_instance')
     def test_get_testruns_success(self, mock_get_instance):
@@ -55,10 +53,8 @@ class TestTestRunService(unittest.TestCase):
         ]
         mock_get_instance.return_value = mock_mongo
         
-        service = TestRunService()
-        
         # Act
-        testruns = service.get_testruns(self.mock_token, self.mock_breadcrumb)
+        testruns = TestRunService.get_testruns(self.mock_token, self.mock_breadcrumb)
         
         # Assert
         self.assertEqual(len(testruns), 2)
@@ -72,10 +68,8 @@ class TestTestRunService(unittest.TestCase):
         mock_mongo.get_document.return_value = {"_id": "123", "name": "Test Run 1"}
         mock_get_instance.return_value = mock_mongo
         
-        service = TestRunService()
-        
         # Act
-        testrun = service.get_testrun("123", self.mock_token, self.mock_breadcrumb)
+        testrun = TestRunService.get_testrun("123", self.mock_token, self.mock_breadcrumb)
         
         # Assert
         self.assertIsNotNone(testrun)
@@ -90,11 +84,10 @@ class TestTestRunService(unittest.TestCase):
         mock_mongo.update_document.return_value = {"_id": "123", "name": "Updated Test Run"}
         mock_get_instance.return_value = mock_mongo
         
-        service = TestRunService()
         data = {"name": "Updated Test Run"}
         
         # Act
-        updated = service.update_testrun("123", data, self.mock_token, self.mock_breadcrumb)
+        updated = TestRunService.update_testrun("123", data, self.mock_token, self.mock_breadcrumb)
         
         # Assert
         self.assertIsNotNone(updated)
@@ -108,41 +101,36 @@ class TestTestRunService(unittest.TestCase):
     def test_update_testrun_prevent_id_update(self, mock_get_instance):
         """Test update_testrun raises HTTPForbidden when trying to update _id."""
         # Arrange
-        service = TestRunService()
         data = {"_id": "999", "name": "Updated"}
         
         # Act & Assert
         with self.assertRaises(HTTPForbidden) as context:
-            service.update_testrun("123", data, self.mock_token, self.mock_breadcrumb)
+            TestRunService.update_testrun("123", data, self.mock_token, self.mock_breadcrumb)
         
         self.assertIn("_id", str(context.exception))
     
     @patch('src.services.testrun_service.MongoIO.get_instance')
     def test_update_testrun_no_permission(self, mock_get_instance):
-        """Test update_testrun raises HTTPForbidden when user lacks permission."""
+        """Test update_testrun raises HTTPForbidden when user lacks admin role."""
         # Arrange
-        mock_token_no_permission = {"user_id": "test_user", "roles": ["viewer"]}
+        mock_token_no_permission = {"user_id": "test_user", "roles": ["developer"]}
         
         # Act & Assert
-        service = TestRunService()
         with self.assertRaises(HTTPForbidden):
-            service.update_testrun("123", {"name": "Updated"}, mock_token_no_permission, self.mock_breadcrumb)
+            TestRunService.update_testrun("123", {"name": "Updated"}, mock_token_no_permission, self.mock_breadcrumb)
     
     @patch('src.services.testrun_service.MongoIO.get_instance')
     def test_update_testrun_not_found(self, mock_get_instance):
-        """Test update_testrun returns None when test run not found."""
+        """Test update_testrun raises HTTPNotFound when test run not found."""
         # Arrange
         mock_mongo = MagicMock()
         mock_mongo.update_document.return_value = None
         mock_get_instance.return_value = mock_mongo
         
-        service = TestRunService()
-        
-        # Act
-        updated = service.update_testrun("999", {"name": "Updated"}, self.mock_token, self.mock_breadcrumb)
-        
-        # Assert
-        self.assertIsNone(updated)
+        # Act & Assert
+        with self.assertRaises(HTTPNotFound) as context:
+            TestRunService.update_testrun("999", {"name": "Updated"}, self.mock_token, self.mock_breadcrumb)
+        self.assertIn("999", str(context.exception))
 
 
 if __name__ == '__main__':

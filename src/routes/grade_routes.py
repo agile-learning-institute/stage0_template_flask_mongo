@@ -23,7 +23,6 @@ def create_grade_routes():
         Blueprint: Flask Blueprint with grade routes
     """
     grade_routes = Blueprint('grade_routes', __name__)
-    service = GradeService()
     
     @grade_routes.route('', methods=['GET'])
     @handle_route_exceptions
@@ -36,9 +35,9 @@ def create_grade_routes():
         """
         token = create_flask_token()
         breadcrumb = create_flask_breadcrumb(token)
-        logger.info(f"get_grades Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
         
-        grades = service.get_grades(token, breadcrumb)
+        grades = GradeService.get_grades(token, breadcrumb)
+        logger.info(f"get_grades Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
         return jsonify(grades), 200
     
     @grade_routes.route('/<grade_id>', methods=['GET'])
@@ -55,12 +54,9 @@ def create_grade_routes():
         """
         token = create_flask_token()
         breadcrumb = create_flask_breadcrumb(token)
+        
+        grade = GradeService.get_grade(grade_id, token, breadcrumb)
         logger.info(f"get_grade Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
-        
-        grade = service.get_grade(grade_id, token, breadcrumb)
-        if grade is None:
-            return jsonify({"error": "Grade not found"}), 404
-        
         return jsonify(grade), 200
     
     logger.info("Grade Flask Routes Registered")

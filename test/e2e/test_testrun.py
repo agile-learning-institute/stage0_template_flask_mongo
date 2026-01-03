@@ -1,7 +1,7 @@
 """
-E2E tests for the Flask MongoDB API Template.
+E2E tests for TestRun domain endpoints.
 
-These tests verify that the server endpoints work correctly by making
+These tests verify that the TestRun endpoints work correctly by making
 actual HTTP requests to a running server at localhost:8184.
 
 To run these tests:
@@ -18,67 +18,11 @@ def get_auth_token():
     """Helper function to get an authentication token from dev-login."""
     response = requests.post(
         f"{BASE_URL}/dev-login",
-        json={"subject": "e2e-test-user", "roles": ["admin", "developer"]}
+        json={"subject": "e2e-test-user", "roles": ["admin"]}
     )
     if response.status_code == 200:
         return response.json()["access_token"]
     return None
-
-
-@pytest.mark.e2e
-def test_dev_login_endpoint_returns_token():
-    """Test that /dev-login endpoint returns a valid token."""
-    response = requests.post(
-        f"{BASE_URL}/dev-login",
-        json={"subject": "e2e-test-user", "roles": ["test"]}
-    )
-    assert response.status_code == 200, f"Expected 200, got {response.status_code}"
-    data = response.json()
-    assert "access_token" in data, "Response missing 'access_token' key"
-    assert data["token_type"] == "bearer", "Token type should be 'bearer'"
-
-
-@pytest.mark.e2e
-def test_metrics_endpoint_returns_200():
-    """Test that /metrics endpoint returns 200 status."""
-    response = requests.get(f"{BASE_URL}/metrics")
-    assert response.status_code == 200, f"Expected 200, got {response.status_code}"
-
-
-@pytest.mark.e2e
-def test_config_endpoint_returns_200_with_token():
-    """Test that /api/config endpoint returns 200 with valid token."""
-    token = get_auth_token()
-    assert token is not None, "Failed to get auth token"
-    
-    headers = {"Authorization": f"Bearer {token}"}
-    response = requests.get(f"{BASE_URL}/api/config", headers=headers)
-    assert response.status_code == 200, f"Expected 200, got {response.status_code}"
-
-
-@pytest.mark.e2e
-def test_grade_get_all_endpoint():
-    """Test GET /api/grade endpoint returns list of grades."""
-    token = get_auth_token()
-    assert token is not None, "Failed to get auth token"
-    
-    headers = {"Authorization": f"Bearer {token}"}
-    response = requests.get(f"{BASE_URL}/api/grade", headers=headers)
-    assert response.status_code == 200, f"Expected 200, got {response.status_code}"
-    assert isinstance(response.json(), list), "Response should be a list"
-
-
-@pytest.mark.e2e
-def test_grade_get_one_endpoint():
-    """Test GET /api/grade/<id> endpoint."""
-    token = get_auth_token()
-    assert token is not None, "Failed to get auth token"
-    
-    headers = {"Authorization": f"Bearer {token}"}
-    # Try to get a grade (may return 404 if no grades exist, which is fine)
-    response = requests.get(f"{BASE_URL}/api/grade/507f1f77bcf86cd799439011", headers=headers)
-    # Should return either 200 or 404
-    assert response.status_code in [200, 404], f"Expected 200 or 404, got {response.status_code}"
 
 
 @pytest.mark.e2e
@@ -196,9 +140,18 @@ def test_testrun_endpoints_require_authentication():
 
 
 @pytest.mark.e2e
-def test_grade_endpoints_require_authentication():
-    """Test that Grade endpoints require authentication."""
-    # Try to access without token
-    response = requests.get(f"{BASE_URL}/api/grade")
-    assert response.status_code == 401, f"Expected 401 Unauthorized, got {response.status_code}"
+def test_testrun_post_requires_admin_role():
+    """Test that POST /api/testrun requires admin role."""
+    # Get token without admin role
+    response = requests.post(
+        f"{BASE_URL}/dev-login",
+        json={"subject": "e2e-test-user", "roles": ["developer"]}
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    
+    headers = {"Authorization": f"Bearer {token}"}
+    data = {"name": "Test Run"}
+    response = requests.post(f"{BASE_URL}/api/testrun", json=data, headers=headers)
+    assert response.status_code == 403, f"Expected 403 Forbidden, got {response.status_code}"
 
