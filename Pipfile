@@ -8,7 +8,7 @@ flask = "*"
 pymongo = "*"
 prometheus-flask-exporter = "*"
 pyjwt = "*"
-api-utils = {editable = true, git = "https://github.com/agile-crafts-people/api_utils.git"}
+api-utils = {editable = true, git = "https://github.com/agile-crafts-people/api_utils.git", ref = "main"}
 
 [dev-packages]
 pytest = "*"

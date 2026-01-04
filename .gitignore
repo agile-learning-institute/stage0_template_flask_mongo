@@ -24,7 +24,8 @@ wheels/
 *.egg
 
 # Pipenv
-Pipfile.lock
+# Note: Pipfile.lock should be committed for applications (ensures reproducible builds)
+# Pipfile.lock
 
 # IDEs
 .vscode/
