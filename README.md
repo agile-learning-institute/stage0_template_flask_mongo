@@ -1,26 +1,29 @@
-# Flask MongoDB API
+# Evaluator API
 
-Flask + MongoDB API following patterns established in [api_utils](https://github.com/agile-crafts-people/api_utils) and Creator Dashboard API standards.
+This API is responsible for running prompt/model evaluation pipelines. 
 
 ## Prerequisites
-- Python [v3.12](https://www.python.org/downloads/)
-- pipenv [v2026.0.3](https://pipenv.pypa.io/en/latest/installation.html) or newer
-- MongoDB (via Docker Compose or local installation)
-- Local clone of [api_utils](https://github.com/agile-crafts-people/api_utils) repository
+- Creator Dashboard [Developers Edition](https://github.com/agile-crafts-people/CreatorDashboard/blob/main/DeveloperEdition/README.md)
+- Developer [API Standard Prerequisites](https://github.com/agile-crafts-people/CreatorDashboard/blob/main/DeveloperEdition/standards/api_standards.md)
+- GitHub Personal Access Token (PAT) with `repo` scope for installing api-utils dependency
 
 ## Developer Commands
 
 ```bash
 ## Install dependencies
+# Configure git to use your GitHub token (one-time setup):
+# git config --global url."https://<YOUR_TOKEN>@github.com/".insteadOf "https://github.com/"
+# Or use credential helper: git config --global credential.helper store
 pipenv install
 
-# start backing db container (required for MongoIO unit/integration tests)
+# start backing db container 
+# Container Related commands use `de down` before starting the requested containers
 pipenv run db
 
-## run unit tests (includes MongoIO Integration Tests)
+## run unit tests 
 pipenv run test
 
-## run demo dev server - captures command line, serves API at localhost:8184
+## run api server in dev mode - captures command line, serves API at localhost:8184
 export ENABLE_LOGIN=true 
 pipenv run dev
 
@@ -29,6 +32,18 @@ pipenv run e2e
 
 ## build package for deployment
 pipenv run build
+
+## build container 
+# For local builds: Pass your GitHub token: docker build --build-arg GITHUB_TOKEN=<token> -t <image> .
+# Or configure git credentials globally (see Install dependencies above)
+# For CI/CD: Uses GITHUB_TOKEN automatically
+pipenv run container
+
+## Run the backing database and api containers
+pipenv run api
+
+## Run the full microservice (db+api+spa)
+pipenv run service
 
 ## format code
 pipenv run format
@@ -50,35 +65,7 @@ pipenv run lint
   - `e2e/` - End-to-end tests flagged with `@pytest.mark.e2e`
 
 ## Endpoints
-
-### Grade Domain
-- `GET /api/grade` - Get all grades
-- `GET /api/grade/<id>` - Get a specific grade by ID
-
-### TestRun Domain
-- `POST /api/testrun` - Create a new test run (requires admin role)
-- `GET /api/testrun` - Get all test runs
-- `GET /api/testrun/<id>` - Get a specific test run by ID
-- `PATCH /api/testrun/<id>` - Update a test run (requires admin role)
-
-### Standard Endpoints
-- `/dev-login` - Development JWT token issuance (requires `ENABLE_LOGIN=true`)
-- `/api/config` - Configuration endpoint (requires valid JWT token)
-- `/metrics` - Prometheus metrics endpoint
-
-## Usage
-
-```python
-from py_utils import Config, MongoIO, create_flask_token, create_flask_breadcrumb
-
-# Get config singleton
-config = Config.get_instance()
-print(config.MONGO_DB_NAME)
-
-# Get MongoDB connection singleton
-mongo = MongoIO.get_instance()
-documents = mongo.get_documents("my_collection")
-```
+See the [project swagger](./docs/openapi.yaml) for information on endpoints. When the API is running an API Explorer is served at [/docs/index.html](http://localhost:8184/docs/index.html)
 
 Simple Curl Commands:
 ```bash
@@ -88,26 +75,19 @@ TOKEN=$(curl -s -X POST http://localhost:8184/dev-login \
   -d '{"subject": "user-123", "roles": ["admin"]}' | jq -r '.access_token')
 
 # Use a Token
-curl http://localhost:8184/api/config \
+curl http://localhost:8184/api/config/ \
   -H "Authorization: Bearer $TOKEN"
+
+curl http://localhost:8184/api/grade/ \
+  -H "Authorization: Bearer $TOKEN"
+
+curl -X POST http://localhost:8184/api/testrun \
+  -H 'Authorization: Bearer $TOKEN' \
+  -d '{"name":"foo"}'
 ```
 
 ## RBAC
-
 - **Grade Service**: Requires valid authentication token only
 - **TestRun Service**: 
   - Read operations: Any authenticated token
   - Write operations (POST, PATCH): Requires `admin` role
-
-## Standards Compliance
-
-This API follows Creator Dashboard API standards:
-- ✅ Config singleton for configuration management
-- ✅ MongoIO singleton for MongoDB operations
-- ✅ Flask route wrappers for exception handling
-- ✅ JWT token authentication
-- ✅ Prometheus metrics endpoint
-- ✅ Standard pipenv scripts (build, dev, test, e2e)
-- ✅ server.py as standard API entry point
-- ✅ Separation of routes and services
-- ✅ Comprehensive unit and E2E testing
