@@ -5,15 +5,11 @@ This API is responsible for running prompt/model evaluation pipelines.
 ## Prerequisites
 - Creator Dashboard [Developers Edition](https://github.com/agile-crafts-people/CreatorDashboard/blob/main/DeveloperEdition/README.md)
 - Developer [API Standard Prerequisites](https://github.com/agile-crafts-people/CreatorDashboard/blob/main/DeveloperEdition/standards/api_standards.md)
-- GitHub Personal Access Token (PAT) with `repo` scope for installing api-utils dependency
 
 ## Developer Commands
 
 ```bash
 ## Install dependencies
-# Configure git to use your GitHub token (one-time setup):
-# git config --global url."https://<YOUR_TOKEN>@github.com/".insteadOf "https://github.com/"
-# Or use credential helper: git config --global credential.helper store
 pipenv install
 
 # start backing db container 
@@ -34,9 +30,6 @@ pipenv run e2e
 pipenv run build
 
 ## build container 
-# For local builds: Pass your GitHub token: docker build --build-arg GITHUB_TOKEN=<token> -t <image> .
-# Or configure git credentials globally (see Install dependencies above)
-# For CI/CD: Uses GITHUB_TOKEN automatically
 pipenv run container
 
 ## Run the backing database and api containers

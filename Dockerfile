@@ -28,7 +28,6 @@ RUN if [ -n "$GITHUB_TOKEN" ]; then \
 
 # Copy source code
 COPY src/ ./src/
-COPY pyproject.toml ./
 
 # Generate build timestamp
 RUN DATE=$(date +'%Y%m%d-%H%M%S') && \
@@ -54,7 +53,6 @@ RUN pipenv install --deploy --system --ignore-pipfile
 # Copy compiled code and bytecode from build stage
 COPY --from=build /app/src/ ./src/
 COPY --from=build /app/BUILT_AT ./
-COPY --from=build /app/pyproject.toml ./
 
 # Set Environment Variables
 ENV PYTHONPATH=/opt/api_server
