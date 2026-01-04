@@ -26,9 +26,9 @@ e2e = "sh -c 'PYTHONPATH=. pytest test/ -m e2e -v'"
 lint = "black --check src test"
 format = "black src test"
 container = "docker build -t ghcr.io/agile-crafts-people/evaluator_api:latest ."
-db = "de down && de up mongodb"
-api = "de down && de up evaluator-api"
-service = "de down && de up evaluator"
+db = "sh -c 'de down && de up mongodb'"
+api = "sh -c 'de down && de up evaluator-api'"
+service = "sh -c 'de down && de up evaluator'"
 
 [requires]
 python_version = "3.12"
