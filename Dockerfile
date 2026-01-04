@@ -29,12 +29,12 @@ RUN if [ -n "$GITHUB_TOKEN" ]; then \
 # Copy source code
 COPY src/ ./src/
 
-# Generate build timestamp
+# Generate build timestamp (for consistency with other systems)
 RUN DATE=$(date +'%Y%m%d-%H%M%S') && \
     echo "${DATE}" > /app/BUILT_AT
 
 # Pre-compile Python code to bytecode (.pyc files)
-RUN python -m compileall -b -f -q src/
+RUN pipenv run build
 
 # Stage 2: Production stage
 FROM python:3.12-slim

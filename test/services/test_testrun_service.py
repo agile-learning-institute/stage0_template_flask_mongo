@@ -12,7 +12,8 @@ class TestTestRunService(unittest.TestCase):
     
     def setUp(self):
         """Set up the test fixture."""
-        self.mock_token = {"user_id": "test_user", "roles": ["developer"]}
+        self.mock_token = {"user_id": "test_user", "roles": ["admin"]}
+        self.mock_token_readonly = {"user_id": "test_user", "roles": ["developer"]}
         self.mock_breadcrumb = {"at_time": "sometime", "correlation_id": "correlation_ID"}
     
     @patch('src.services.testrun_service.MongoIO.get_instance')
@@ -54,7 +55,7 @@ class TestTestRunService(unittest.TestCase):
         mock_get_instance.return_value = mock_mongo
         
         # Act
-        testruns = TestRunService.get_testruns(self.mock_token, self.mock_breadcrumb)
+        testruns = TestRunService.get_testruns(self.mock_token_readonly, self.mock_breadcrumb)
         
         # Assert
         self.assertEqual(len(testruns), 2)
@@ -69,7 +70,7 @@ class TestTestRunService(unittest.TestCase):
         mock_get_instance.return_value = mock_mongo
         
         # Act
-        testrun = TestRunService.get_testrun("123", self.mock_token, self.mock_breadcrumb)
+        testrun = TestRunService.get_testrun("123", self.mock_token_readonly, self.mock_breadcrumb)
         
         # Assert
         self.assertIsNotNone(testrun)
@@ -100,6 +101,10 @@ class TestTestRunService(unittest.TestCase):
     @patch('src.services.testrun_service.MongoIO.get_instance')
     def test_update_testrun_prevent_restricted_fields(self, mock_get_instance):
         """Test update_testrun raises HTTPForbidden when trying to update restricted fields."""
+        # Arrange - need to mock MongoIO to prevent actual DB calls
+        mock_mongo = MagicMock()
+        mock_get_instance.return_value = mock_mongo
+        
         # Test _id
         data = {"_id": "999", "name": "Updated"}
         with self.assertRaises(HTTPForbidden) as context:

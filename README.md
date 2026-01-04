@@ -26,7 +26,7 @@ pipenv run dev
 ## run E2E tests (assumes running API at localhost:8184)
 pipenv run e2e
 
-## build package for deployment
+## build application (pre-compiles Python code)
 pipenv run build
 
 ## build container 
