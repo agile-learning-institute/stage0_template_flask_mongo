@@ -67,14 +67,15 @@ export TOKEN=$(curl -s -X POST http://localhost:8184/dev-login \
   -d '{"subject": "user-123", "roles": ["admin"]}' | jq -r '.access_token')
 
 # Use a Token
-curl http://localhost:8184/api/config/ \
+curl http://localhost:8184/api/config \
   -H "Authorization: Bearer $TOKEN"
 
-curl http://localhost:8184/api/grade/ \
+curl http://localhost:8184/api/grade \
   -H "Authorization: Bearer $TOKEN"
 
 curl -X POST http://localhost:8184/api/testrun \
-  -H 'Authorization: Bearer $TOKEN' \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"name":"foo"}'
 ```
 
