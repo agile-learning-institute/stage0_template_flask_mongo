@@ -60,14 +60,33 @@ app.register_blueprint(create_testrun_routes(), url_prefix='/api/testrun')
 logger.info("  /api/testrun")
 
 # Serve static documentation files from docs directory
-# Get the directory where this file is located, then go up one level to project root
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Use absolute path based on working directory (PYTHONPATH) for reliability in containers
+BASE_DIR = os.environ.get('PYTHONPATH', os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DOCS_DIR = os.path.join(BASE_DIR, 'docs')
+
+# Ensure docs directory exists and log the path for debugging
+if not os.path.exists(DOCS_DIR):
+    logger.warning(f"Docs directory not found at {DOCS_DIR}, trying alternative path calculation")
+    # Fallback to relative path calculation
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    DOCS_DIR = os.path.join(BASE_DIR, 'docs')
+    
+if os.path.exists(DOCS_DIR):
+    logger.info(f"Serving docs from: {DOCS_DIR}")
+else:
+    logger.error(f"Docs directory not found at {DOCS_DIR}")
 
 @app.route('/docs/<path:filename>')
 def serve_docs(filename):
     """Serve static files from the docs directory."""
-    return send_from_directory(DOCS_DIR, filename)
+    try:
+        if not os.path.exists(DOCS_DIR):
+            logger.error(f"Cannot serve {filename}: docs directory {DOCS_DIR} does not exist")
+            return {"error": "Documentation directory not found"}, 500
+        return send_from_directory(DOCS_DIR, filename)
+    except Exception as e:
+        logger.error(f"Error serving {filename} from {DOCS_DIR}: {str(e)}")
+        return {"error": f"Error serving file: {str(e)}"}, 500
 
 logger.info("  /docs/<path>")
 logger.info("  /metrics")
