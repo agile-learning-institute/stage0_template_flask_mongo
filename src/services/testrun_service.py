@@ -6,6 +6,7 @@ Handles RBAC checks, security validations, and MongoDB operations for TestRun do
 from py_utils import MongoIO
 from py_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound, HTTPInternalServerError
 from bson import ObjectId
+from bson.errors import InvalidId
 import logging
 
 logger = logging.getLogger(__name__)
@@ -81,8 +82,10 @@ class TestRunService:
                 del data['_id']
             
             # Build breadcrumb object for created/saved fields (schema expects Registry, not from_ip)
+            # Provide default IP if from_ip is None or empty (can happen with Docker/reverse proxies)
+            from_ip = breadcrumb.get('from_ip') or '127.0.0.1'
             breadcrumb_obj = {
-                "Registry": breadcrumb.get('from_ip', ''),
+                "Registry": from_ip,
                 "at_time": breadcrumb.get('at_time'),
                 "by_user": breadcrumb.get('by_user'),
                 "correlation_id": breadcrumb.get('correlation_id')
@@ -93,6 +96,14 @@ class TestRunService:
             data['created'] = breadcrumb_obj
             data['saved'] = breadcrumb_obj
             
+            # Convert prompt_id string to ObjectId (MongoDB schema requires ObjectId type)
+            if 'prompt_id' in data and isinstance(data['prompt_id'], str):
+                try:
+                    data['prompt_id'] = ObjectId(data['prompt_id'])
+                except (InvalidId, ValueError) as e:
+                    logger.error(f"Invalid prompt_id format: {data['prompt_id']}")
+                    raise HTTPInternalServerError(f"Invalid prompt_id format: {str(e)}")
+            
             mongo = MongoIO.get_instance()
             testrun_id = mongo.create_document(TestRunService.COLLECTION_NAME, data)
             logger.info(f"Created test run {testrun_id} for user {token.get('user_id')}")
@@ -100,8 +111,10 @@ class TestRunService:
         except HTTPForbidden:
             raise
         except Exception as e:
-            logger.error(f"Error creating test run: {str(e)}")
-            raise HTTPInternalServerError("Failed to create test run")
+            error_msg = str(e)
+            logger.error(f"Error creating test run: {error_msg}")
+            # Include the actual error message for debugging (be careful in production)
+            raise HTTPInternalServerError(f"Failed to create test run: {error_msg}")
     
     @staticmethod
     def get_testruns(token, breadcrumb):
@@ -183,8 +196,10 @@ class TestRunService:
             set_data = {k: v for k, v in data.items() if k not in restricted_fields}
             
             # Automatically update the 'saved' field with current breadcrumb (system-managed)
+            # Provide default IP if from_ip is None or empty (can happen with Docker/reverse proxies)
+            from_ip = breadcrumb.get('from_ip') or '127.0.0.1'
             breadcrumb_obj = {
-                "Registry": breadcrumb.get('from_ip', ''),
+                "Registry": from_ip,
                 "at_time": breadcrumb.get('at_time'),
                 "by_user": breadcrumb.get('by_user'),
                 "correlation_id": breadcrumb.get('correlation_id')

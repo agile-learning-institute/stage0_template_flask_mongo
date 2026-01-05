@@ -20,7 +20,6 @@ pipenv run db
 pipenv run test
 
 ## run api server in dev mode - captures command line, serves API at localhost:8184
-export ENABLE_LOGIN=true 
 pipenv run dev
 
 ## run E2E tests (assumes running API at localhost:8184)
@@ -63,7 +62,7 @@ See the [project swagger](./docs/openapi.yaml) for information on endpoints. Whe
 Simple Curl Commands:
 ```bash
 # Get a token
-TOKEN=$(curl -s -X POST http://localhost:8184/dev-login \
+export TOKEN=$(curl -s -X POST http://localhost:8184/dev-login \
   -H "Content-Type: application/json" \
   -d '{"subject": "user-123", "roles": ["admin"]}' | jq -r '.access_token')
 

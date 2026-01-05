@@ -18,13 +18,9 @@ import sys
 import signal
 from flask import Flask
 
-# Initialize Config Singleton (doesn't require external services)
-from py_utils import Config
+# Initialize Config Singleton and MongoIO Singleton
+from py_utils import Config, MongoIO
 config = Config.get_instance()
-
-# MongoIO will be initialized lazily when needed
-# This allows the module to be imported without requiring MongoDB to be running
-from py_utils import MongoIO
 mongo = MongoIO.get_instance()
 config.set_enumerators(mongo.get_documents(config.ENUMERATORS_COLLECTION_NAME))
 config.set_versions(mongo.get_documents(config.VERSIONS_COLLECTION_NAME))

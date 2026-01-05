@@ -33,16 +33,18 @@ def test_testrun_post_endpoint():
     
     headers = {"Authorization": f"Bearer {token}"}
     data = {
-        "name": "E2E Test Run",
-        "status": "pending",
-        "description": "Created by E2E test"
+        "name": "E2E_Test_Run",
+        "status": "scheduled",
+        "description": "Created by E2E test",
+        "prompt_id": "507f1f77bcf86cd799439012",
+        "prompt_name": "e2e-test-prompt"
     }
     response = requests.post(f"{BASE_URL}/api/testrun", json=data, headers=headers)
     assert response.status_code == 201, f"Expected 201, got {response.status_code}"
     
     created = response.json()
     assert "_id" in created, "Response should include _id"
-    assert created["name"] == "E2E Test Run", "Name should match"
+    assert created["name"] == "E2E_Test_Run", "Name should match"
     
     return created["_id"]
 
@@ -67,7 +69,12 @@ def test_testrun_get_one_endpoint():
     
     # First create a test run
     headers = {"Authorization": f"Bearer {token}"}
-    data = {"name": "Test Run for GET", "status": "pending"}
+    data = {
+        "name": "Test_Run_for_GET",
+        "status": "scheduled",
+        "prompt_id": "507f1f77bcf86cd799439012",
+        "prompt_name": "e2e-test-prompt"
+    }
     create_response = requests.post(f"{BASE_URL}/api/testrun", json=data, headers=headers)
     assert create_response.status_code == 201
     testrun_id = create_response.json()["_id"]
@@ -87,13 +94,18 @@ def test_testrun_patch_endpoint():
     
     # First create a test run
     headers = {"Authorization": f"Bearer {token}"}
-    data = {"name": "Test Run for PATCH", "status": "pending"}
+    data = {
+        "name": "Test_Run_for_PATCH",
+        "status": "scheduled",
+        "prompt_id": "507f1f77bcf86cd799439012",
+        "prompt_name": "e2e-test-prompt"
+    }
     create_response = requests.post(f"{BASE_URL}/api/testrun", json=data, headers=headers)
     assert create_response.status_code == 201
     testrun_id = create_response.json()["_id"]
     
     # Then update it
-    update_data = {"name": "Updated Test Run", "status": "completed"}
+    update_data = {"name": "Updated_Test_Run", "status": "complete"}
     response = requests.patch(
         f"{BASE_URL}/api/testrun/{testrun_id}",
         json=update_data,
@@ -101,8 +113,8 @@ def test_testrun_patch_endpoint():
     )
     assert response.status_code == 200, f"Expected 200, got {response.status_code}"
     updated = response.json()
-    assert updated["name"] == "Updated Test Run", "Name should be updated"
-    assert updated["status"] == "completed", "Status should be updated"
+    assert updated["name"] == "Updated_Test_Run", "Name should be updated"
+    assert updated["status"] == "complete", "Status should be updated"
 
 
 @pytest.mark.e2e
@@ -113,7 +125,12 @@ def test_testrun_patch_prevent_id_update():
     
     # First create a test run
     headers = {"Authorization": f"Bearer {token}"}
-    data = {"name": "Test Run for ID Test"}
+    data = {
+        "name": "Test_Run_for_ID_Test",
+        "status": "scheduled",
+        "prompt_id": "507f1f77bcf86cd799439012",
+        "prompt_name": "e2e-test-prompt"
+    }
     create_response = requests.post(f"{BASE_URL}/api/testrun", json=data, headers=headers)
     assert create_response.status_code == 201
     testrun_id = create_response.json()["_id"]
@@ -151,7 +168,12 @@ def test_testrun_post_requires_admin_role():
     token = response.json()["access_token"]
     
     headers = {"Authorization": f"Bearer {token}"}
-    data = {"name": "Test Run"}
+    data = {
+        "name": "Test_Run",
+        "status": "scheduled",
+        "prompt_id": "507f1f77bcf86cd799439012",
+        "prompt_name": "e2e-test-prompt"
+    }
     response = requests.post(f"{BASE_URL}/api/testrun", json=data, headers=headers)
     assert response.status_code == 403, f"Expected 403 Forbidden, got {response.status_code}"
 

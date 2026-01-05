@@ -1,5 +1,3 @@
-LABEL org.opencontainers.image.source https://github.com/agile-crafts-people/evaluator_api
-
 # Stage 1: Build and compile stage
 FROM python:3.12-slim as build
 
@@ -39,16 +37,30 @@ RUN pipenv run build
 # Stage 2: Production stage
 FROM python:3.12-slim
 
+LABEL org.opencontainers.image.source="https://github.com/agile-crafts-people/evaluator_api"
+
 WORKDIR /opt/api_server
 
-# Install runtime dependencies
-RUN pip install --no-cache-dir pipenv gunicorn gevent
+# Install runtime dependencies including git (needed for git-based pip dependencies)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends git && \
+    rm -rf /var/lib/apt/lists/* && \
+    pip install --no-cache-dir pipenv gunicorn gevent
 
 # Copy dependency files
 COPY Pipfile Pipfile.lock ./
 
-# Install production dependencies (no GITHUB_TOKEN needed in production stage - deps already installed)
-RUN pipenv install --deploy --system --ignore-pipfile
+# Install production dependencies
+# Uses GITHUB_TOKEN from build arg (CI/local with token) or git credentials (local with configured token)
+# Using --ignore-pipfile to use Pipfile.lock only (avoids Python version check from Pipfile)
+ARG GITHUB_TOKEN=
+RUN if [ -n "$GITHUB_TOKEN" ]; then \
+        git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"; \
+    fi && \
+    pipenv install --system --ignore-pipfile && \
+    if [ -n "$GITHUB_TOKEN" ]; then \
+        git config --global --unset url."https://${GITHUB_TOKEN}@github.com/".insteadOf; \
+    fi
 
 # Copy compiled code and bytecode from build stage
 COPY --from=build /app/src/ ./src/

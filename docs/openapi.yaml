@@ -495,7 +495,7 @@ components:
                 example: "2024-01-15T10:30:00Z"
               human_sentiment:
                 type: object
-                description: Human Rated Sentiments
+                description: Human Rated Sentiments - A list of all sentiment types
                 additionalProperties: false
                 required:
                   - general
@@ -503,7 +503,7 @@ components:
                 properties:
                   general:
                     type: string
-                    description: General Sentiment Classification
+                    description: General sentiment classification
                     enum:
                       - negative
                       - neutral
@@ -511,20 +511,38 @@ components:
                     example: positive
                   emotional:
                     type: string
-                    description: Emotional Sentiment Classification
+                    description: Emotional Sentiment classification
                     enum:
                       - anger
+                      - anticipation
+                      - disgust
+                      - fear
+                      - frustration
                       - joy
-                      - sarcasm
+                      - neutral
+                      - sadness
+                      - surprise
+                      - trust
                     example: joy
+                  design_thinking:
+                    type: string
+                    description: Design Thinking Emotional classification
+                    enum:
+                      - affirming
+                      - blocking
+                      - draining
+                      - energizing
+                      - neutral
+                      - tense
+                    example: energizing
               llm_sentiment:
                 type: object
-                description: LLM Rated Sentiments
+                description: LLM Rated Sentiments - A list of all sentiment types
                 additionalProperties: false
                 properties:
                   general:
                     type: string
-                    description: General Sentiment Classification
+                    description: General sentiment classification
                     enum:
                       - negative
                       - neutral
@@ -532,12 +550,30 @@ components:
                     example: positive
                   emotional:
                     type: string
-                    description: Emotional Sentiment Classification
+                    description: Emotional Sentiment classification
                     enum:
                       - anger
+                      - anticipation
+                      - disgust
+                      - fear
+                      - frustration
                       - joy
-                      - sarcasm
+                      - neutral
+                      - sadness
+                      - surprise
+                      - trust
                     example: joy
+                  design_thinking:
+                    type: string
+                    description: Design Thinking Emotional classification
+                    enum:
+                      - affirming
+                      - blocking
+                      - draining
+                      - energizing
+                      - neutral
+                      - tense
+                    example: energizing
               start:
                 type: string
                 format: date-time
