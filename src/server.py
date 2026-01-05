@@ -15,8 +15,9 @@ This server demonstrates:
 - Graceful shutdown handling
 """
 import sys
+import os
 import signal
-from flask import Flask
+from flask import Flask, send_from_directory
 
 # Initialize Config Singleton and MongoIO Singleton
 from py_utils import Config, MongoIO
@@ -58,6 +59,17 @@ from src.routes.testrun_routes import create_testrun_routes
 app.register_blueprint(create_testrun_routes(), url_prefix='/api/testrun')
 logger.info("  /api/testrun")
 
+# Serve static documentation files from docs directory
+# Get the directory where this file is located, then go up one level to project root
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DOCS_DIR = os.path.join(BASE_DIR, 'docs')
+
+@app.route('/docs/<path:filename>')
+def serve_docs(filename):
+    """Serve static files from the docs directory."""
+    return send_from_directory(DOCS_DIR, filename)
+
+logger.info("  /docs/<path>")
 logger.info("  /metrics")
 logger.info("Routes Registered")
 

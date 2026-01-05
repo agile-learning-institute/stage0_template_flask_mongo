@@ -66,6 +66,9 @@ RUN if [ -n "$GITHUB_TOKEN" ]; then \
 COPY --from=build /app/src/ ./src/
 COPY --from=build /app/BUILT_AT ./
 
+# Copy documentation files for API explorer
+COPY docs/ ./docs/
+
 # Set Environment Variables
 ENV PYTHONPATH=/opt/api_server
 ENV PYTHONDONTWRITEBYTECODE=1

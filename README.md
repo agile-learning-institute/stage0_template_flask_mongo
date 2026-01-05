@@ -56,7 +56,7 @@ pipenv run lint
   - `services/` - Service unit tests
   - `e2e/` - End-to-end tests flagged with `@pytest.mark.e2e`
 
-## Endpoints
+## API Endpoints
 See the [project swagger](./docs/openapi.yaml) for information on endpoints. When the API is running an API Explorer is served at [/docs/index.html](http://localhost:8184/docs/index.html)
 
 Simple Curl Commands:
