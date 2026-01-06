@@ -83,7 +83,7 @@ def serve_docs(filename):
         if not os.path.exists(DOCS_DIR):
             logger.error(f"Cannot serve {filename}: docs directory {DOCS_DIR} does not exist")
             return {"error": "Documentation directory not found"}, 500
-        return send_from_directory(DOCS_DIR, filename)
+    return send_from_directory(DOCS_DIR, filename)
     except Exception as e:
         logger.error(f"Error serving {filename} from {DOCS_DIR}: {str(e)}")
         return {"error": f"Error serving file: {str(e)}"}, 500
