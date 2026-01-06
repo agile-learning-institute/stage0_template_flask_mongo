@@ -18,6 +18,8 @@ import sys
 import os
 import signal
 from flask import Flask, send_from_directory
+import logging
+logger = logging.getLogger(__name__)
 
 # Initialize Config Singleton and MongoIO Singleton
 from py_utils import Config, MongoIO
@@ -25,9 +27,6 @@ config = Config.get_instance()
 mongo = MongoIO.get_instance()
 config.set_enumerators(mongo.get_documents(config.ENUMERATORS_COLLECTION_NAME))
 config.set_versions(mongo.get_documents(config.VERSIONS_COLLECTION_NAME))
-
-import logging
-logger = logging.getLogger(__name__)
 
 # Initialize Flask App
 from py_utils import MongoJSONEncoder
@@ -79,14 +78,7 @@ else:
 @app.route('/docs/<path:filename>')
 def serve_docs(filename):
     """Serve static files from the docs directory."""
-    try:
-        if not os.path.exists(DOCS_DIR):
-            logger.error(f"Cannot serve {filename}: docs directory {DOCS_DIR} does not exist")
-            return {"error": "Documentation directory not found"}, 500
     return send_from_directory(DOCS_DIR, filename)
-    except Exception as e:
-        logger.error(f"Error serving {filename} from {DOCS_DIR}: {str(e)}")
-        return {"error": f"Error serving file: {str(e)}"}, 500
 
 logger.info("  /docs/<path>")
 logger.info("  /metrics")
