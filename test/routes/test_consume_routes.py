@@ -69,7 +69,7 @@ class TestConsumeRoutes(unittest.TestCase):
     def test_get_consume_not_found(self, mock_get_consume, mock_create_breadcrumb, mock_create_token):
         """Test GET /api/consume/<id> when consume is not found."""
         # Arrange
-        from api_utils.flask_utils.exceptions import HTTPNotFound
+        from py_utils.flask_utils.exceptions import HTTPNotFound
         mock_create_token.return_value = self.mock_token
         mock_create_breadcrumb.return_value = self.mock_breadcrumb
         
@@ -86,7 +86,7 @@ class TestConsumeRoutes(unittest.TestCase):
     def test_get_consumes_unauthorized(self, mock_create_token):
         """Test GET /api/consume when token is invalid."""
         # Arrange
-        from api_utils.flask_utils.exceptions import HTTPUnauthorized
+        from py_utils.flask_utils.exceptions import HTTPUnauthorized
         mock_create_token.side_effect = HTTPUnauthorized("Invalid token")
         
         # Act

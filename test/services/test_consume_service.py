@@ -4,7 +4,7 @@ Unit tests for Consume service.
 import unittest
 from unittest.mock import patch, MagicMock
 from src.services.consume_service import ConsumeService
-from api_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound, HTTPInternalServerError
+from py_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound, HTTPInternalServerError
 
 
 class TestConsumeService(unittest.TestCase):

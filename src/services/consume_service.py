@@ -3,8 +3,8 @@ Consume service for business logic and RBAC.
 
 Handles RBAC checks and MongoDB operations for Consume domain.
 """
-from api_utils import MongoIO, Config
-from api_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound, HTTPInternalServerError
+from py_utils import MongoIO, Config
+from py_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound, HTTPInternalServerError
 import logging
 
 logger = logging.getLogger(__name__)
