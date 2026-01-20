@@ -40,7 +40,7 @@ RUN pipenv run build
 # Stage 2: Production stage
 FROM python:3.12-slim
 
-LABEL org.opencontainers.image.source="https://github.com/agile-crafts-people/evaluator_api"
+LABEL org.opencontainers.image.source="https://github.com/agile-crafts-people/template_flask_mongo"
 
 WORKDIR /opt/api_server
 

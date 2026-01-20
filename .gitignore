@@ -33,6 +33,7 @@ wheels/
 *.swp
 *.swo
 *~
+pyrightconfig.json
 
 # Environment
 .env

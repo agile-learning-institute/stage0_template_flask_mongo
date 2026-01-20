@@ -1,10 +1,11 @@
 """
 Flask MongoDB API Template Server
 
-This is a minimal Flask + MongoDB API that follows patterns established in api_utils.
-It implements two domains:
-- Grade: GET one, GET many endpoints
-- TestRun: POST, GET one, GET many, PATCH endpoints
+This is a Flask + MongoDB API template that follows patterns established in api_utils.
+It implements three domains following the Creator Dashboard architecture:
+- Control: POST, GET many (with name query), GET one, PATCH one endpoints
+- Create: POST, GET many, GET one endpoints
+- Consume: GET many, GET one endpoints (read-only)
 
 This server demonstrates:
 - Config singleton initialization
@@ -13,76 +14,61 @@ This server demonstrates:
 - Prometheus metrics integration
 - JWT token authentication and authorization
 - Graceful shutdown handling
+- RBAC placeholder pattern for future implementation
 """
 import sys
 import os
 import signal
 from flask import Flask, send_from_directory
+
+# Initialize Config Singleton (doesn't require external services)
+from api_utils import Config
+config = Config.get_instance()
+
+# Initialize logging (Config constructor configures logging)
 import logging
 logger = logging.getLogger(__name__)
+logger.info("============= Starting Template Flask MongoDB API Server ===============")
 
-# Initialize Config Singleton and MongoIO Singleton
-from py_utils import Config, MongoIO
-config = Config.get_instance()
+# Initialize MongoIO Singleton and set enumerators and versions
+from api_utils import MongoIO
 mongo = MongoIO.get_instance()
 config.set_enumerators(mongo.get_documents(config.ENUMERATORS_COLLECTION_NAME))
 config.set_versions(mongo.get_documents(config.VERSIONS_COLLECTION_NAME))
 
 # Initialize Flask App
-from py_utils import MongoJSONEncoder
-from prometheus_flask_exporter import PrometheusMetrics
-
+from api_utils import MongoJSONEncoder
 app = Flask(__name__)
 app.json = MongoJSONEncoder(app)
 
-# Apply Prometheus monitoring middleware - exposes /metrics endpoint (default)
-metrics = PrometheusMetrics(app)
+# Route registration (all grouped together)
+from api_utils import (
+    create_metric_routes,
+    create_dev_login_routes,
+    create_config_routes,
+    create_explorer_routes
+)
+from src.routes.control_routes import create_control_routes
+from src.routes.create_routes import create_create_routes
+from src.routes.consume_routes import create_consume_routes
 
-# Register Routes
-logger.info("Registering Routes")
-
-from py_utils import create_config_routes
+# Register route blueprints
+app.register_blueprint(create_explorer_routes(), url_prefix='/docs')
 app.register_blueprint(create_config_routes(), url_prefix='/api/config')
-logger.info("  /api/config")
+app.register_blueprint(create_dev_login_routes(), url_prefix='/dev-login')
+app.register_blueprint(create_control_routes(), url_prefix='/api/control')
+app.register_blueprint(create_create_routes(), url_prefix='/api/create')
+app.register_blueprint(create_consume_routes(), url_prefix='/api/consume')
+metrics = create_metric_routes(app)  # This exposes /metrics endpoint
 
-if config.ENABLE_LOGIN:
-    from py_utils import create_dev_login_routes
-    app.register_blueprint(create_dev_login_routes())
-    logger.info("  /dev-login")
-
-from src.routes.grade_routes import create_grade_routes
-app.register_blueprint(create_grade_routes(), url_prefix='/api/grade')
-logger.info("  /api/grade")
-
-from src.routes.testrun_routes import create_testrun_routes
-app.register_blueprint(create_testrun_routes(), url_prefix='/api/testrun')
-logger.info("  /api/testrun")
-
-# Serve static documentation files from docs directory
-# Use absolute path based on working directory (PYTHONPATH) for reliability in containers
-BASE_DIR = os.environ.get('PYTHONPATH', os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DOCS_DIR = os.path.join(BASE_DIR, 'docs')
-
-# Ensure docs directory exists and log the path for debugging
-if not os.path.exists(DOCS_DIR):
-    logger.warning(f"Docs directory not found at {DOCS_DIR}, trying alternative path calculation")
-    # Fallback to relative path calculation
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    DOCS_DIR = os.path.join(BASE_DIR, 'docs')
-    
-if os.path.exists(DOCS_DIR):
-    logger.info(f"Serving docs from: {DOCS_DIR}")
-else:
-    logger.error(f"Docs directory not found at {DOCS_DIR}")
-
-@app.route('/docs/<path:filename>')
-def serve_docs(filename):
-    """Serve static files from the docs directory."""
-    return send_from_directory(DOCS_DIR, filename)
-
-logger.info("  /docs/<path>")
-logger.info("  /metrics")
-logger.info("Routes Registered")
+logger.info("============= Routes Registered ===============")
+logger.info("  /api/config - Configuration endpoint")
+logger.info("  /dev-login - Dev Login (returns 404 if disabled)")
+logger.info("  /api/control - Control domain endpoints")
+logger.info("  /api/create - Create domain endpoints")
+logger.info("  /api/consume - Consume domain endpoints")
+logger.info("  /docs - API Explorer")
+logger.info("  /metrics - Prometheus metrics endpoint")
 
 # Define a signal handler for SIGTERM and SIGINT
 def handle_exit(signum, frame):
@@ -107,7 +93,7 @@ signal.signal(signal.SIGINT, handle_exit)
 
 # Expose app for Gunicorn or direct execution
 if __name__ == "__main__":
-    api_port = config.EVALUATOR_API_PORT
+    api_port = config.TEMPLATE_API_PORT
     logger.info(f"Starting Flask server on port {api_port}")
     app.run(host="0.0.0.0", port=api_port, debug=False)
 
