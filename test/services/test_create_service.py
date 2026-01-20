@@ -72,8 +72,8 @@ class TestCreateService(unittest.TestCase):
     
     @patch('src.services.create_service.Config.get_instance')
     @patch('src.services.create_service.MongoIO.get_instance')
-    def test_create_create_handles_missing_ip(self, mock_get_mongo, mock_get_config):
-        """Test create_create handles missing from_ip gracefully."""
+    def test_create_create_uses_breadcrumb_directly(self, mock_get_mongo, mock_get_config):
+        """Test create_create uses breadcrumb directly for created field."""
         # Arrange
         mock_config = MagicMock()
         mock_config.CREATE_COLLECTION_NAME = "Create"
@@ -83,20 +83,23 @@ class TestCreateService(unittest.TestCase):
         mock_mongo.create_document.return_value = "123"
         mock_get_mongo.return_value = mock_mongo
         
-        breadcrumb_no_ip = {
+        breadcrumb = {
+            "from_ip": "192.168.1.1",
             "at_time": "2024-01-01T00:00:00Z",
             "by_user": "test_user",
             "correlation_id": "test-id"
         }
         
         # Act
-        result = CreateService.create_create({"name": "test"}, self.mock_token, breadcrumb_no_ip)
+        result = CreateService.create_create({"name": "test"}, self.mock_token, breadcrumb)
         
         # Assert
         self.assertEqual(result, "123")
         call_args = mock_mongo.create_document.call_args
         created_data = call_args[0][1]
-        self.assertEqual(created_data["created"]["Registry"], "127.0.0.1")
+        # Verify breadcrumb is used directly without transformation
+        self.assertEqual(created_data["created"], breadcrumb)
+        self.assertEqual(created_data["created"]["from_ip"], "192.168.1.1")
     
     @patch('src.services.create_service.Config.get_instance')
     @patch('src.services.create_service.MongoIO.get_instance')

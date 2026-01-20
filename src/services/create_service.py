@@ -68,19 +68,10 @@ class CreateService:
             if '_id' in data:
                 del data['_id']
             
-            # Build breadcrumb object for created field (schema expects Registry, not from_ip)
-            # Provide default IP if from_ip is None or empty (can happen with Docker/reverse proxies)
-            from_ip = breadcrumb.get('from_ip') or '127.0.0.1'
-            breadcrumb_obj = {
-                "Registry": from_ip,
-                "at_time": breadcrumb.get('at_time'),
-                "by_user": breadcrumb.get('by_user'),
-                "correlation_id": breadcrumb.get('correlation_id')
-            }
-            
             # Automatically populate required field: created
             # This is system-managed and should not be provided by the client
-            data['created'] = breadcrumb_obj
+            # Use breadcrumb directly as it already has the correct structure
+            data['created'] = breadcrumb
             
             mongo = MongoIO.get_instance()
             config = Config.get_instance()

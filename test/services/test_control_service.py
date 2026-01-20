@@ -239,8 +239,8 @@ class TestControlService(unittest.TestCase):
     
     @patch('src.services.control_service.Config.get_instance')
     @patch('src.services.control_service.MongoIO.get_instance')
-    def test_update_control_handles_missing_ip(self, mock_get_mongo, mock_get_config):
-        """Test update_control handles missing from_ip gracefully."""
+    def test_update_control_uses_breadcrumb_directly(self, mock_get_mongo, mock_get_config):
+        """Test update_control uses breadcrumb directly for saved field."""
         # Arrange
         mock_config = MagicMock()
         mock_config.CONTROL_COLLECTION_NAME = "Control"
@@ -250,20 +250,23 @@ class TestControlService(unittest.TestCase):
         mock_mongo.update_document.return_value = {"_id": "123", "name": "updated"}
         mock_get_mongo.return_value = mock_mongo
         
-        breadcrumb_no_ip = {
+        breadcrumb = {
+            "from_ip": "192.168.1.1",
             "at_time": "2024-01-01T00:00:00Z",
             "by_user": "test_user",
             "correlation_id": "test-id"
         }
         
         # Act
-        result = ControlService.update_control("123", {"name": "updated"}, self.mock_token, breadcrumb_no_ip)
+        result = ControlService.update_control("123", {"name": "updated"}, self.mock_token, breadcrumb)
         
         # Assert
         self.assertIsNotNone(result)
         call_args = mock_mongo.update_document.call_args
         set_data = call_args[1]["set_data"]
-        self.assertEqual(set_data["saved"]["Registry"], "127.0.0.1")
+        # Verify breadcrumb is used directly without transformation
+        self.assertEqual(set_data["saved"], breadcrumb)
+        self.assertEqual(set_data["saved"]["from_ip"], "192.168.1.1")
     
     @patch('src.services.control_service.Config.get_instance')
     @patch('src.services.control_service.MongoIO.get_instance')

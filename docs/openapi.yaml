@@ -1,9 +1,9 @@
 openapi: 3.0.3
 info:
-  title: Flask MongoDB API Template
+  title: Template Flask MongoDB API
   description: |
-    A minimal Flask + MongoDB API template that follows patterns established in api_utils.
-    This API implements two domains: Grade and TestRun.
+    A Flask + MongoDB API template that follows patterns established in api_utils.
+    This API implements three domains: Control, Create, and Consume.
     
     ## Authentication
     All endpoints (except `/dev-login` and `/metrics`) require JWT authentication via the `Authorization` header:
@@ -11,7 +11,7 @@ info:
     Authorization: Bearer <token>
     ```
     
-    For local development, obtain a token from the `/dev-login` endpoint (requires `ENABLE_LOGIN=true`).
+    For local development, obtain a token from the `/dev-login` endpoint.
   version: 0.1.0
   contact:
     name: AgileCraftsPeople
@@ -20,10 +20,8 @@ info:
     name: Apache-2.0
 
 servers:
-  - url: http://localhost:8184
+  - url: http://localhost:8081
     description: Local development server
-  - url: https://api.example.com
-    description: Production server
 
 tags:
   - name: Authentication
@@ -32,10 +30,12 @@ tags:
     description: Configuration endpoints
   - name: Metrics
     description: Monitoring endpoints
-  - name: Grade
-    description: Grade domain operations
-  - name: TestRun
-    description: TestRun domain operations
+  - name: Control
+    description: Control domain operations (create, read, update)
+  - name: Create
+    description: Create domain operations (create, read)
+  - name: Consume
+    description: Consume domain operations (read-only)
 
 paths:
   /dev-login:
@@ -43,9 +43,7 @@ paths:
       tags:
         - Authentication
       summary: Get development JWT token
-      description: |
-        Issues a signed JWT for local/development environments.
-        This endpoint is only enabled when `ENABLE_LOGIN=true`.
+      description: Issues a signed JWT for local/development environments
       operationId: devLogin
       requestBody:
         required: false
@@ -92,12 +90,6 @@ paths:
                     items:
                       type: string
                     description: User roles
-        '403':
-          description: Dev login is not enabled
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
 
   /api/config:
     get:
@@ -151,105 +143,43 @@ paths:
             text/plain:
               schema:
                 type: string
-                example: |
-                  # HELP http_requests_total Total number of HTTP requests
-                  # TYPE http_requests_total counter
-                  http_requests_total{method="GET",status="200"} 42
 
-  /api/grade:
+  /api/control:
     get:
       tags:
-        - Grade
-      summary: Get all grades
-      description: Retrieve all grade documents
-      operationId: getGrades
+        - Control
+      summary: Get all control documents
+      description: Retrieve all control documents, optionally filtered by name
+      operationId: getControls
       security:
         - bearerAuth: []
+      parameters:
+        - name: name
+          in: query
+          required: false
+          description: Optional name filter (supports partial matches, case-insensitive)
+          schema:
+            type: string
+            example: my-control
       responses:
         '200':
-          description: Successfully retrieved grades
+          description: Successfully retrieved controls
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Grade'
+                  $ref: '#/components/schemas/Control'
         '401':
-          description: Unauthorized - Invalid or missing token
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Unauthorized'
         '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/grade/{gradeId}:
-    get:
-      tags:
-        - Grade
-      summary: Get grade by ID
-      description: Retrieve a specific grade document by its ID
-      operationId: getGrade
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: gradeId
-          in: path
-          required: true
-          description: The grade ID (MongoDB ObjectId)
-          schema:
-            type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-            example: 507f1f77bcf86cd799439011
-      responses:
-        '200':
-          description: Successfully retrieved grade
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Grade'
-        '401':
-          description: Unauthorized - Invalid or missing token
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '404':
-          description: Grade not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/testrun:
+          $ref: '#/components/responses/InternalError'
     post:
       tags:
-        - TestRun
-      summary: Create test run
-      description: Create a new test run document
-      operationId: createTestRun
+        - Control
+      summary: Create a new control document
+      description: Create a new control document (requires staff or admin role)
+      operationId: createControl
       security:
         - bearerAuth: []
       requestBody:
@@ -257,175 +187,229 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TestRunInput'
+              $ref: '#/components/schemas/ControlInput'
       responses:
         '201':
-          description: Test run created successfully
+          description: Control created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TestRun'
+                type: object
+                properties:
+                  _id:
+                    type: string
+                    pattern: '^[0-9a-fA-F]{24}$'
         '401':
-          description: Unauthorized - Invalid or missing token
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          description: Forbidden - Insufficient permissions (requires admin or developer role)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/InternalError'
+
+  /api/control/{controlId}:
     get:
       tags:
-        - TestRun
-      summary: Get all test runs
-      description: Retrieve all test run documents
-      operationId: getTestRuns
+        - Control
+      summary: Get control by ID
+      description: Retrieve a specific control document by its ID
+      operationId: getControl
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      responses:
+        '200':
+          description: Successfully retrieved control
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Control'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags:
+        - Control
+      summary: Update control document
+      description: Update a control document (requires admin role). Cannot update _id, created, or saved fields.
+      operationId: updateControl
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ObjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ControlUpdate'
+      responses:
+        '200':
+          description: Control updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Control'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/create:
+    get:
+      tags:
+        - Create
+      summary: Get all create documents
+      description: Retrieve all create documents
+      operationId: getCreates
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: Successfully retrieved test runs
+          description: Successfully retrieved creates
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/TestRun'
+                  $ref: '#/components/schemas/Create'
         '401':
-          description: Unauthorized - Invalid or missing token
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Unauthorized'
         '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/testrun/{testRunId}:
-    get:
+          $ref: '#/components/responses/InternalError'
+    post:
       tags:
-        - TestRun
-      summary: Get test run by ID
-      description: Retrieve a specific test run document by its ID
-      operationId: getTestRun
+        - Create
+      summary: Create a new create document
+      description: Create a new create document (requires staff or admin role)
+      operationId: createCreate
       security:
         - bearerAuth: []
-      parameters:
-        - name: testRunId
-          in: path
-          required: true
-          description: The test run ID (MongoDB ObjectId)
-          schema:
-            type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-            example: 507f1f77bcf86cd799439011
-      responses:
-        '200':
-          description: Successfully retrieved test run
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TestRun'
-        '401':
-          description: Unauthorized - Invalid or missing token
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden - Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '404':
-          description: Test run not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-    patch:
-      tags:
-        - TestRun
-      summary: Update test run
-      description: |
-        Update a test run document. The `_id` field cannot be updated.
-        Requires admin or developer role.
-      operationId: updateTestRun
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: testRunId
-          in: path
-          required: true
-          description: The test run ID (MongoDB ObjectId)
-          schema:
-            type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-            example: 507f1f77bcf86cd799439011
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TestRunUpdate'
+              $ref: '#/components/schemas/CreateInput'
+      responses:
+        '201':
+          description: Create document created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                    pattern: '^[0-9a-fA-F]{24}$'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/create/{createId}:
+    get:
+      tags:
+        - Create
+      summary: Get create by ID
+      description: Retrieve a specific create document by its ID
+      operationId: getCreate
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: createId
+          in: path
+          required: true
+          description: The create ID (MongoDB ObjectId)
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
       responses:
         '200':
-          description: Test run updated successfully
+          description: Successfully retrieved create
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TestRun'
+                $ref: '#/components/schemas/Create'
         '401':
-          description: Unauthorized - Invalid or missing token
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: |
-            Forbidden - Either insufficient permissions (requires admin role)
-            or attempting to update restricted fields (_id, created, saved)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Unauthorized'
         '404':
-          description: Test run not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NotFound'
         '500':
-          description: Internal server error
+          $ref: '#/components/responses/InternalError'
+
+  /api/consume:
+    get:
+      tags:
+        - Consume
+      summary: Get all consume documents
+      description: Retrieve all consume documents (read-only), optionally filtered by name
+      operationId: getConsumes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: name
+          in: query
+          required: false
+          description: Optional name filter (supports partial matches, case-insensitive)
+          schema:
+            type: string
+            example: my-consume
+      responses:
+        '200':
+          description: Successfully retrieved consumes
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Consume'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/consume/{consumeId}:
+    get:
+      tags:
+        - Consume
+      summary: Get consume by ID
+      description: Retrieve a specific consume document by its ID (read-only)
+      operationId: getConsume
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: consumeId
+          in: path
+          required: true
+          description: The consume ID (MongoDB ObjectId)
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Successfully retrieved consume
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Consume'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
 components:
   securitySchemes:
@@ -436,6 +420,43 @@ components:
       description: |
         JWT token obtained from `/dev-login` endpoint.
         Include the token in the Authorization header: `Bearer <token>`
+
+  parameters:
+    ObjectId:
+      name: controlId
+      in: path
+      required: true
+      description: MongoDB ObjectId
+      schema:
+        type: string
+        pattern: '^[0-9a-fA-F]{24}$'
+        example: 507f1f77bcf86cd799439011
+
+  responses:
+    Unauthorized:
+      description: Unauthorized - Invalid or missing token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Forbidden - Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
 
   schemas:
     Error:
@@ -448,443 +469,189 @@ components:
           description: Error message
           example: Unauthorized
 
-    Grade:
+    Breadcrumb:
       type: object
-      description: Human and LLM Generated Classifications for Grading Purposes
+      description: Audit trail information
       additionalProperties: false
       required:
-        - _id
-        - run_id
-        - video_id
-        - replies
+        - from_ip
+        - by_user
+        - at_time
+        - correlation_id
       properties:
-        _id:
+        from_ip:
           type: string
-          description: Mongo Document Identifier
-          pattern: '^[0-9a-fA-F]{24}$'
-          example: 507f1f77bcf86cd799439011
-        run_id:
+          format: ip
+          description: HTTP request remote IP address
+          example: 192.168.1.1
+        at_time:
           type: string
-          description: The _id of the TestRun this grade is associated with.
-          pattern: '^[0-9a-fA-F]{24}$'
-          example: 507f1f77bcf86cd799439011
-        video_id:
+          format: date-time
+          description: Timestamp of the action
+          example: "2024-01-15T10:00:00Z"
+        by_user:
           type: string
-          description: Youtube Video Identifier
+          description: User ID who performed the action
           pattern: '^[^\s]{1,40}$'
-          example: dQw4w9WgXcQ
-        replies:
-          type: array
-          description: Comment classifications
-          items:
-            type: object
-            additionalProperties: false
-            required:
-              - comment
-              - human_sentiment
-            properties:
-              comment:
-                type: string
-                description: The comment text
-                maxLength: 4096
-                example: "Great video! Really enjoyed it."
-              completed:
-                type: string
-                format: date-time
-                description: When the LLM categorization was completed
-                example: "2024-01-15T10:30:00Z"
-              human_sentiment:
-                type: object
-                description: Human Rated Sentiments - A list of all sentiment types
-                additionalProperties: false
-                required:
-                  - general
-                  - emotional
-                properties:
-                  general:
-                    type: string
-                    description: General sentiment classification
-                    enum:
-                      - negative
-                      - neutral
-                      - positive
-                    example: positive
-                  emotional:
-                    type: string
-                    description: Emotional Sentiment classification
-                    enum:
-                      - anger
-                      - anticipation
-                      - disgust
-                      - fear
-                      - frustration
-                      - joy
-                      - neutral
-                      - sadness
-                      - surprise
-                      - trust
-                    example: joy
-                  design_thinking:
-                    type: string
-                    description: Design Thinking Emotional classification
-                    enum:
-                      - affirming
-                      - blocking
-                      - draining
-                      - energizing
-                      - neutral
-                      - tense
-                    example: energizing
-              llm_sentiment:
-                type: object
-                description: LLM Rated Sentiments - A list of all sentiment types
-                additionalProperties: false
-                properties:
-                  general:
-                    type: string
-                    description: General sentiment classification
-                    enum:
-                      - negative
-                      - neutral
-                      - positive
-                    example: positive
-                  emotional:
-                    type: string
-                    description: Emotional Sentiment classification
-                    enum:
-                      - anger
-                      - anticipation
-                      - disgust
-                      - fear
-                      - frustration
-                      - joy
-                      - neutral
-                      - sadness
-                      - surprise
-                      - trust
-                    example: joy
-                  design_thinking:
-                    type: string
-                    description: Design Thinking Emotional classification
-                    enum:
-                      - affirming
-                      - blocking
-                      - draining
-                      - energizing
-                      - neutral
-                      - tense
-                    example: energizing
-              start:
-                type: string
-                format: date-time
-                description: When the LLM categorization began
-                example: "2024-01-15T10:29:00Z"
+          example: user-123
+        correlation_id:
+          type: string
+          description: Logging correlation ID
+          pattern: '^[^\s]{1,40}$'
+          example: corr-abc123
 
-    TestRun:
+    Control:
       type: object
-      description: A test run that generates EvaluatorGrades from EvaluatorTestData
+      description: Control domain document
       additionalProperties: false
       required:
         - _id
         - name
-        - status
         - created
         - saved
-        - prompt_id
-        - prompt_name
       properties:
         _id:
           type: string
-          description: Mongo ID for the document
+          description: MongoDB document ID
           pattern: '^[0-9a-fA-F]{24}$'
           example: 507f1f77bcf86cd799439011
         name:
           type: string
-          description: A Name assigned to the run
+          description: Control name
           pattern: '^[^\s]{1,40}$'
-          example: Test Run 1
-        status:
-          type: string
-          description: Job Status
-          enum:
-            - aborted
-            - cancelled
-            - complete
-            - running
-            - scheduled
-          example: scheduled
+          example: my-control
         description:
           type: string
-          description: Run Description
+          description: Control description
           pattern: '^[^\t\n]{0,255}$'
-          example: Initial test run for validation
-        prompt_id:
+          example: A sample control document
+        status:
           type: string
-          description: The prompt ID of the prompt used by the test run
-          pattern: '^[0-9a-fA-F]{24}$'
-          example: 507f1f77bcf86cd799439012
-        prompt_name:
-          type: string
-          description: The name of the prompt used
-          pattern: '^[^\s]{1,40}$'
-          example: sentiment-analysis-v1
-        model:
-          type: string
-          description: The ollama model name used by the test run
+          description: Control status
           enum:
-            - deepseek-r1:70b
-            - gpt-oss:120b
-            - gpt-oss:20b
-            - nemotron-3-nano:30b
-            - qwen3-coder:30b
-          example: deepseek-r1:70b
+            - active
+            - archived
+          example: active
         created:
-          type: object
-          description: When was the job created
-          additionalProperties: false
-          required:
-            - Registry
-            - by_user
-            - at_time
-            - correlation_id
-          properties:
-            Registry:
-              type: string
-              format: ip
-              description: Http Request remote IP address
-              example: 192.168.1.1
-            at_time:
-              type: string
-              format: date-time
-              description: The date-time when last updated
-              example: "2024-01-15T10:00:00Z"
-            by_user:
-              type: string
-              description: ID Of User
-              pattern: '^[^\s]{1,40}$'
-              example: user-123
-            correlation_id:
-              type: string
-              description: The logging correlation ID of the update transaction
-              pattern: '^[^\s]{1,40}$'
-              example: corr-abc123
+          $ref: '#/components/schemas/Breadcrumb'
         saved:
-          type: object
-          description: When was the job last updated
-          additionalProperties: false
-          required:
-            - Registry
-            - by_user
-            - at_time
-            - correlation_id
-          properties:
-            Registry:
-              type: string
-              format: ip
-              description: Http Request remote IP address
-              example: 192.168.1.1
-            at_time:
-              type: string
-              format: date-time
-              description: The date-time when last updated
-              example: "2024-01-15T10:05:00Z"
-            by_user:
-              type: string
-              description: ID Of User
-              pattern: '^[^\s]{1,40}$'
-              example: user-123
-            correlation_id:
-              type: string
-              description: The logging correlation ID of the update transaction
-              pattern: '^[^\s]{1,40}$'
-              example: corr-abc123
-        started:
-          type: string
-          format: date-time
-          description: When the job was started
-          example: "2024-01-15T10:10:00Z"
-        completed:
-          type: string
-          format: date-time
-          description: When was the run completed
-          example: "2024-01-15T11:00:00Z"
-        grades:
-          type: array
-          description: ID's of Individual Evaluator Grade files
-          items:
-            type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-            description: Array item
-          example:
-            - 507f1f77bcf86cd799439013
-            - 507f1f77bcf86cd799439014
-        test_data:
-          type: object
-          description: Information about the Test Data for this run
-          additionalProperties: false
-          properties:
-            selected:
-              type: number
-              description: Number of documents selected at start time
-              minimum: 0
-              multipleOf: 1
-              example: 100
-            processed:
-              type: number
-              description: Number of documents that have been processed
-              minimum: 0
-              multipleOf: 1
-              example: 95
-            tags:
-              type: array
-              description: The tags used to selected test data documents
-              items:
-                type: string
-                pattern: '^[^\s]{1,40}$'
-              example:
-                - youtube
-                - comments
+          $ref: '#/components/schemas/Breadcrumb'
 
-    TestRunInput:
+    ControlInput:
       type: object
-      description: Input for creating a new test run
+      description: Input for creating a control document
       properties:
         name:
           type: string
-          description: A Name assigned to the run
+          description: Control name
           pattern: '^[^\s]{1,40}$'
-          example: Test Run 1
-        status:
-          type: string
-          description: Job Status
-          enum:
-            - aborted
-            - cancelled
-            - complete
-            - running
-            - scheduled
-          example: scheduled
+          example: my-control
         description:
           type: string
-          description: Run Description
+          description: Control description
           pattern: '^[^\t\n]{0,255}$'
-          example: Initial test run for validation
-        prompt_id:
+          example: A sample control document
+        status:
           type: string
-          description: The prompt ID of the prompt used by the test run
-          pattern: '^[0-9a-fA-F]{24}$'
-          example: 507f1f77bcf86cd799439012
-        prompt_name:
-          type: string
-          description: The name of the prompt used
-          pattern: '^[^\s]{1,40}$'
-          example: sentiment-analysis-v1
-        model:
-          type: string
-          description: The ollama model name used by the test run
+          description: Control status
           enum:
-            - deepseek-r1:70b
-            - gpt-oss:120b
-            - gpt-oss:20b
-            - nemotron-3-nano:30b
-            - qwen3-coder:30b
-          example: deepseek-r1:70b
-        test_data:
-          type: object
-          description: Information about the Test Data for this run
-          additionalProperties: false
-          properties:
-            selected:
-              type: number
-              description: Number of documents selected at start time
-              minimum: 0
-              multipleOf: 1
-            processed:
-              type: number
-              description: Number of documents that have been processed
-              minimum: 0
-              multipleOf: 1
-            tags:
-              type: array
-              description: The tags used to selected test data documents
-              items:
-                type: string
-                pattern: '^[^\s]{1,40}$'
+            - active
+            - archived
+          example: active
 
-    TestRunUpdate:
+    ControlUpdate:
       type: object
-      description: Fields to update in a test run (cannot include _id, created, saved)
+      description: Fields to update in a control document (cannot include _id, created, saved)
       properties:
         name:
           type: string
-          description: A Name assigned to the run
+          description: Control name
           pattern: '^[^\s]{1,40}$'
-          example: Updated Test Run
-        status:
-          type: string
-          description: Job Status
-          enum:
-            - aborted
-            - cancelled
-            - complete
-            - running
-            - scheduled
-          example: complete
         description:
           type: string
-          description: Run Description
+          description: Control description
           pattern: '^[^\t\n]{0,255}$'
-          example: Updated description
-        prompt_id:
+        status:
           type: string
-          description: The prompt ID of the prompt used by the test run
-          pattern: '^[0-9a-fA-F]{24}$'
-        prompt_name:
-          type: string
-          description: The name of the prompt used
-          pattern: '^[^\s]{1,40}$'
-        model:
-          type: string
-          description: The ollama model name used by the test run
+          description: Control status
           enum:
-            - deepseek-r1:70b
-            - gpt-oss:120b
-            - gpt-oss:20b
-            - nemotron-3-nano:30b
-            - qwen3-coder:30b
-        started:
-          type: string
-          format: date-time
-          description: When the job was started
-        completed:
-          type: string
-          format: date-time
-          description: When was the run completed
-        grades:
-          type: array
-          description: ID's of Individual Evaluator Grade files
-          items:
-            type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-        test_data:
-          type: object
-          description: Information about the Test Data for this run
-          additionalProperties: false
-          properties:
-            selected:
-              type: number
-              description: Number of documents selected at start time
-              minimum: 0
-              multipleOf: 1
-            processed:
-              type: number
-              description: Number of documents that have been processed
-              minimum: 0
-              multipleOf: 1
-            tags:
-              type: array
-              description: The tags used to selected test data documents
-              items:
-                type: string
-                pattern: '^[^\s]{1,40}$'
+            - active
+            - archived
 
+    Create:
+      type: object
+      description: Create domain document
+      additionalProperties: false
+      required:
+        - _id
+        - name
+        - created
+      properties:
+        _id:
+          type: string
+          description: MongoDB document ID
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: 507f1f77bcf86cd799439011
+        name:
+          type: string
+          description: Create name
+          pattern: '^[^\s]{1,40}$'
+          example: my-create
+        description:
+          type: string
+          description: Create description
+          pattern: '^[^\t\n]{0,255}$'
+          example: A sample create document
+        status:
+          type: string
+          description: Create status
+          example: active
+        created:
+          $ref: '#/components/schemas/Breadcrumb'
+
+    CreateInput:
+      type: object
+      description: Input for creating a create document
+      properties:
+        name:
+          type: string
+          description: Create name
+          pattern: '^[^\s]{1,40}$'
+          example: my-create
+        description:
+          type: string
+          description: Create description
+          pattern: '^[^\t\n]{0,255}$'
+          example: A sample create document
+        status:
+          type: string
+          description: Create status
+          example: active
+
+    Consume:
+      type: object
+      description: Consume domain document (read-only)
+      additionalProperties: false
+      required:
+        - _id
+        - name
+      properties:
+        _id:
+          type: string
+          description: MongoDB document ID
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: 507f1f77bcf86cd799439011
+        name:
+          type: string
+          description: Consume name
+          pattern: '^[^\s]{1,40}$'
+          example: my-consume
+        description:
+          type: string
+          description: Consume description
+          pattern: '^[^\t\n]{0,255}$'
+          example: A sample consume document
+        status:
+          type: string
+          description: Consume status
+          example: active
