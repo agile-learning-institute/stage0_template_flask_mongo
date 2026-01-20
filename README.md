@@ -77,7 +77,7 @@ pipenv run lint
 - `GET /api/consume/{id}` - Get a specific consume document
 
 ### Common Endpoints
-- `GET /docs/index.html` - API Explorer (OpenAPI documentation)
+- `GET /docs` - API Explorer (OpenAPI/Swagger documentation)
 - `POST /dev-login` - Development JWT token issuance (only enabled with `ENABLE_LOGIN=true`)
 - `GET /api/config` - Configuration endpoint
 - `GET /metrics` - Prometheus metrics

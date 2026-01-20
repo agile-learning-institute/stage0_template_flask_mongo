@@ -81,12 +81,18 @@ if os.path.exists(DOCS_DIR):
 else:
     logger.error(f"Docs directory not found at {DOCS_DIR}")
 
+@app.route('/docs')
+@app.route('/docs/')
+def serve_docs_root():
+    """Serve the API explorer at /docs root."""
+    return send_from_directory(DOCS_DIR, 'explorer.html')
+
 @app.route('/docs/<path:filename>')
 def serve_docs(filename):
     """Serve static files from the docs directory."""
     return send_from_directory(DOCS_DIR, filename)
 
-logger.info("  /docs/<path>")
+logger.info("  /docs")
 logger.info("  /metrics")
 logger.info("Routes Registered")
 
