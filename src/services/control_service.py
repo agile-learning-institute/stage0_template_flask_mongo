@@ -23,12 +23,6 @@ class ControlService:
     """
     
     @staticmethod
-    def _get_collection_name():
-        """Get the Control collection name from config."""
-        config = Config.get_instance()
-        return config.CONTROL_COLLECTION_NAME
-    
-    @staticmethod
     def _check_permission(token, operation):
         """
         Check if the user has permission to perform an operation.
@@ -98,7 +92,8 @@ class ControlService:
             data['saved'] = breadcrumb_obj
             
             mongo = MongoIO.get_instance()
-            control_id = mongo.create_document(ControlService._get_collection_name(), data)
+            config = Config.get_instance()
+            control_id = mongo.create_document(config.CONTROL_COLLECTION_NAME, data)
             logger.info(f"Created control {control_id} for user {token.get('user_id')}")
             return control_id
         except HTTPForbidden:
@@ -124,14 +119,15 @@ class ControlService:
         try:
             ControlService._check_permission(token, 'read')
             mongo = MongoIO.get_instance()
+            config = Config.get_instance()
             
             if name:
                 # Use regex for partial matching (case-insensitive)
                 query = {"name": {"$regex": name, "$options": "i"}}
-                controls = mongo.find_documents(ControlService._get_collection_name(), query)
+                controls = mongo.find_documents(config.CONTROL_COLLECTION_NAME, query)
                 logger.info(f"Retrieved {len(controls)} controls matching name '{name}' for user {token.get('user_id')}")
             else:
-                controls = mongo.get_documents(ControlService._get_collection_name())
+                controls = mongo.get_documents(config.CONTROL_COLLECTION_NAME)
                 logger.info(f"Retrieved {len(controls)} controls for user {token.get('user_id')}")
             
             return controls
@@ -159,7 +155,8 @@ class ControlService:
             ControlService._check_permission(token, 'read')
             
             mongo = MongoIO.get_instance()
-            control = mongo.get_document(ControlService._get_collection_name(), control_id)
+            config = Config.get_instance()
+            control = mongo.get_document(config.CONTROL_COLLECTION_NAME, control_id)
             if control is None:
                 raise HTTPNotFound(f"Control {control_id} not found")
             
@@ -208,8 +205,9 @@ class ControlService:
             set_data['saved'] = breadcrumb_obj
             
             mongo = MongoIO.get_instance()
+            config = Config.get_instance()
             updated = mongo.update_document(
-                ControlService._get_collection_name(),
+                config.CONTROL_COLLECTION_NAME,
                 document_id=control_id,
                 set_data=set_data
             )

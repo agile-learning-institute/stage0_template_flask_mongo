@@ -21,12 +21,6 @@ class ConsumeService:
     """
     
     @staticmethod
-    def _get_collection_name():
-        """Get the Consume collection name from config."""
-        config = Config.get_instance()
-        return config.CONSUME_COLLECTION_NAME
-    
-    @staticmethod
     def _check_permission(token, operation):
         """
         Check if the user has permission to perform an operation.
@@ -59,14 +53,15 @@ class ConsumeService:
         try:
             ConsumeService._check_permission(token, 'read')
             mongo = MongoIO.get_instance()
+            config = Config.get_instance()
             
             if name:
                 # Use regex for partial matching (case-insensitive)
                 query = {"name": {"$regex": name, "$options": "i"}}
-                consumes = mongo.find_documents(ConsumeService._get_collection_name(), query)
+                consumes = mongo.find_documents(config.CONSUME_COLLECTION_NAME, query)
                 logger.info(f"Retrieved {len(consumes)} consumes matching name '{name}' for user {token.get('user_id')}")
             else:
-                consumes = mongo.get_documents(ConsumeService._get_collection_name())
+                consumes = mongo.get_documents(config.CONSUME_COLLECTION_NAME)
                 logger.info(f"Retrieved {len(consumes)} consumes for user {token.get('user_id')}")
             
             return consumes
@@ -94,7 +89,8 @@ class ConsumeService:
             ConsumeService._check_permission(token, 'read')
             
             mongo = MongoIO.get_instance()
-            consume = mongo.get_document(ConsumeService._get_collection_name(), consume_id)
+            config = Config.get_instance()
+            consume = mongo.get_document(config.CONSUME_COLLECTION_NAME, consume_id)
             if consume is None:
                 raise HTTPNotFound(f"Consume {consume_id} not found")
             

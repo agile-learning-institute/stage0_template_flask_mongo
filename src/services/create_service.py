@@ -23,12 +23,6 @@ class CreateService:
     """
     
     @staticmethod
-    def _get_collection_name():
-        """Get the Create collection name from config."""
-        config = Config.get_instance()
-        return config.CREATE_COLLECTION_NAME
-    
-    @staticmethod
     def _check_permission(token, operation):
         """
         Check if the user has permission to perform an operation.
@@ -80,7 +74,8 @@ class CreateService:
             data['created'] = breadcrumb_obj
             
             mongo = MongoIO.get_instance()
-            create_id = mongo.create_document(CreateService._get_collection_name(), data)
+            config = Config.get_instance()
+            create_id = mongo.create_document(config.CREATE_COLLECTION_NAME, data)
             logger.info(f"Created create {create_id} for user {token.get('user_id')}")
             return create_id
         except HTTPForbidden:
@@ -105,7 +100,8 @@ class CreateService:
         try:
             CreateService._check_permission(token, 'read')
             mongo = MongoIO.get_instance()
-            creates = mongo.get_documents(CreateService._get_collection_name())
+            config = Config.get_instance()
+            creates = mongo.get_documents(config.CREATE_COLLECTION_NAME)
             logger.info(f"Retrieved {len(creates)} creates for user {token.get('user_id')}")
             return creates
         except Exception as e:
@@ -132,7 +128,8 @@ class CreateService:
             CreateService._check_permission(token, 'read')
             
             mongo = MongoIO.get_instance()
-            create = mongo.get_document(CreateService._get_collection_name(), create_id)
+            config = Config.get_instance()
+            create = mongo.get_document(config.CREATE_COLLECTION_NAME, create_id)
             if create is None:
                 raise HTTPNotFound(f"Create {create_id} not found")
             
