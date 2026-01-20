@@ -2,7 +2,7 @@
 E2E tests for common endpoints (dev-login, config, metrics).
 
 These tests verify that common endpoints work correctly by making
-actual HTTP requests to a running server at localhost:8081.
+actual HTTP requests to a running server at localhost:8184.
 
 To run these tests:
 1. Start the server: pipenv run dev
@@ -11,7 +11,7 @@ To run these tests:
 import pytest
 import requests
 
-BASE_URL = "http://localhost:8081"
+BASE_URL = "http://localhost:8184"
 
 
 def get_auth_token():

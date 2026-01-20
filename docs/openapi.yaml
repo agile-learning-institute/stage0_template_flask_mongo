@@ -20,7 +20,7 @@ info:
     name: Apache-2.0
 
 servers:
-  - url: http://localhost:8081
+  - url: http://localhost:8184
     description: Local development server
 
 tags:

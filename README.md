@@ -19,10 +19,10 @@ pipenv run db
 ## run unit tests 
 pipenv run test
 
-## run api server in dev mode - captures command line, serves API at localhost:8081
+## run api server in dev mode - captures command line, serves API at localhost:8184
 pipenv run dev
 
-## run E2E tests (assumes running API at localhost:8081)
+## run E2E tests (assumes running API at localhost:8184)
 pipenv run e2e
 
 ## run tests with coverage report
@@ -87,41 +87,41 @@ See the [project swagger](./docs/openapi.yaml) for detailed endpoint information
 ### Simple Curl Commands:
 ```bash
 # Get a token
-export TOKEN=$(curl -s -X POST http://localhost:8081/dev-login \
+export TOKEN=$(curl -s -X POST http://localhost:8184/dev-login \
   -H "Content-Type: application/json" \
   -d '{"subject": "user-123", "roles": ["admin"]}' | jq -r '.access_token')
 
 # Control endpoints
-curl http://localhost:8081/api/control \
+curl http://localhost:8184/api/control \
   -H "Authorization: Bearer $TOKEN"
 
-curl http://localhost:8081/api/control?name=test \
+curl http://localhost:8184/api/control?name=test \
   -H "Authorization: Bearer $TOKEN"
 
-curl -X POST http://localhost:8081/api/control \
+curl -X POST http://localhost:8184/api/control \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"name":"my-control","description":"Test control","status":"active"}'
 
-curl -X PATCH http://localhost:8081/api/control/{id} \
+curl -X PATCH http://localhost:8184/api/control/{id} \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"status":"archived"}'
 
 # Create endpoints
-curl -X POST http://localhost:8081/api/create \
+curl -X POST http://localhost:8184/api/create \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"name":"my-create","status":"active"}'
 
-curl http://localhost:8081/api/create \
+curl http://localhost:8184/api/create \
   -H "Authorization: Bearer $TOKEN"
 
 # Consume endpoints
-curl http://localhost:8081/api/consume \
+curl http://localhost:8184/api/consume \
   -H "Authorization: Bearer $TOKEN"
 
-curl http://localhost:8081/api/consume?name=test \
+curl http://localhost:8184/api/consume?name=test \
   -H "Authorization: Bearer $TOKEN"
 ```
 

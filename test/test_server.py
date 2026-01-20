@@ -21,7 +21,7 @@ class TestServerInitialization(unittest.TestCase):
         mock_config = MagicMock()
         mock_config.ENUMERATORS_COLLECTION_NAME = "Enumerators"
         mock_config.VERSIONS_COLLECTION_NAME = "Versions"
-        mock_config.TEMPLATE_API_PORT = 8081
+        mock_config.TEMPLATE_API_PORT = 8184
         mock_get_config.return_value = mock_config
         
         mock_mongo_instance = MagicMock()
