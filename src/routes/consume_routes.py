@@ -30,13 +30,19 @@ def create_consume_routes():
         """
         GET /api/consume - Retrieve all consume documents.
         
+        Query Parameters:
+            name: Optional name filter for partial matching (case-insensitive)
+        
         Returns:
             JSON response with list of consume documents
         """
         token = create_flask_token()
         breadcrumb = create_flask_breadcrumb(token)
         
-        consumes = ConsumeService.get_consumes(token, breadcrumb)
+        # Get optional name query parameter
+        name = request.args.get('name')
+        
+        consumes = ConsumeService.get_consumes(token, breadcrumb, name=name)
         logger.info(f"get_consumes Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
         return jsonify(consumes), 200
     

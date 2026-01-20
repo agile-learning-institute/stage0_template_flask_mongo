@@ -45,6 +45,34 @@ class TestConsumeService(unittest.TestCase):
     
     @patch('src.services.consume_service.Config.get_instance')
     @patch('src.services.consume_service.MongoIO.get_instance')
+    def test_get_consumes_with_name_filter(self, mock_get_mongo, mock_get_config):
+        """Test retrieval of consume documents with name filter."""
+        # Arrange
+        mock_config = MagicMock()
+        mock_config.CONSUME_COLLECTION_NAME = "Consume"
+        mock_get_config.return_value = mock_config
+        
+        mock_mongo = MagicMock()
+        mock_mongo.find_documents.return_value = [
+            {"_id": "123", "name": "test-consume"}
+        ]
+        mock_get_mongo.return_value = mock_mongo
+        
+        # Act
+        consumes = ConsumeService.get_consumes(self.mock_token, self.mock_breadcrumb, name="test")
+        
+        # Assert
+        self.assertEqual(len(consumes), 1)
+        mock_mongo.find_documents.assert_called_once()
+        call_args = mock_mongo.find_documents.call_args
+        self.assertEqual(call_args[0][0], "Consume")
+        query = call_args[0][1]
+        self.assertIn("name", query)
+        self.assertEqual(query["name"]["$regex"], "test")
+        self.assertEqual(query["name"]["$options"], "i")
+    
+    @patch('src.services.consume_service.Config.get_instance')
+    @patch('src.services.consume_service.MongoIO.get_instance')
     def test_get_consume_success(self, mock_get_mongo, mock_get_config):
         """Test successful retrieval of a specific consume document."""
         # Arrange

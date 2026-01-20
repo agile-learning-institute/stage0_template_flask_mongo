@@ -40,6 +40,20 @@ def test_get_consumes_endpoint():
 
 
 @pytest.mark.e2e
+def test_get_consumes_with_name_filter():
+    """Test GET /api/consume with name query parameter."""
+    token = get_auth_token()
+    assert token is not None, "Failed to get auth token"
+    
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.get(f"{BASE_URL}/api/consume?name=test", headers=headers)
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+    
+    response_data = response.json()
+    assert isinstance(response_data, list), "Response should be a list"
+
+
+@pytest.mark.e2e
 def test_get_consume_not_found():
     """Test GET /api/consume/<id> with non-existent ID."""
     token = get_auth_token()

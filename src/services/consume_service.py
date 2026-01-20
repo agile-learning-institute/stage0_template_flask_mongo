@@ -44,22 +44,31 @@ class ConsumeService:
         pass
     
     @staticmethod
-    def get_consumes(token, breadcrumb):
+    def get_consumes(token, breadcrumb, name=None):
         """
-        Retrieve all consume documents.
+        Retrieve all consume documents, optionally filtered by name.
         
         Args:
             token: Token dictionary with user_id and roles
             breadcrumb: Breadcrumb dictionary for logging
+            name: Optional name filter (supports partial matches)
             
         Returns:
-            list: List of all consume documents
+            list: List of consume documents matching the criteria
         """
         try:
             ConsumeService._check_permission(token, 'read')
             mongo = MongoIO.get_instance()
-            consumes = mongo.get_documents(ConsumeService._get_collection_name())
-            logger.info(f"Retrieved {len(consumes)} consumes for user {token.get('user_id')}")
+            
+            if name:
+                # Use regex for partial matching (case-insensitive)
+                query = {"name": {"$regex": name, "$options": "i"}}
+                consumes = mongo.find_documents(ConsumeService._get_collection_name(), query)
+                logger.info(f"Retrieved {len(consumes)} consumes matching name '{name}' for user {token.get('user_id')}")
+            else:
+                consumes = mongo.get_documents(ConsumeService._get_collection_name())
+                logger.info(f"Retrieved {len(consumes)} consumes for user {token.get('user_id')}")
+            
             return consumes
         except Exception as e:
             logger.error(f"Error retrieving consumes: {str(e)}")

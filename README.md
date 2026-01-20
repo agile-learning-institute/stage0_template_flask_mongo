@@ -73,7 +73,7 @@ pipenv run lint
 - `GET /api/create/{id}` - Get a specific create document
 
 ### Consume Domain (Read-only)
-- `GET /api/consume` - Get all consume documents
+- `GET /api/consume` - Get all consume documents (supports `?name=` query parameter for filtering)
 - `GET /api/consume/{id}` - Get a specific consume document
 
 ### Common Endpoints
@@ -119,6 +119,9 @@ curl http://localhost:8081/api/create \
 
 # Consume endpoints
 curl http://localhost:8081/api/consume \
+  -H "Authorization: Bearer $TOKEN"
+
+curl http://localhost:8081/api/consume?name=test \
   -H "Authorization: Bearer $TOKEN"
 ```
 
