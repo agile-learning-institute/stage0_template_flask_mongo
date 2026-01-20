@@ -36,6 +36,15 @@ class CreateService:
             
         Note: This is a placeholder for future RBAC implementation.
         For now, all operations require a valid token (authentication only).
+        
+        Example RBAC implementation:
+            if operation == 'create':
+                # Create requires staff or admin role
+                if not any(role in token.get('roles', []) for role in ['staff', 'admin']):
+                    raise HTTPForbidden("Staff or admin role required to create create documents")
+            elif operation == 'read':
+                # Read requires any authenticated user (no additional check needed)
+                pass
         """
         pass
     

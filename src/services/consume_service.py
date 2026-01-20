@@ -34,6 +34,14 @@ class ConsumeService:
             
         Note: This is a placeholder for future RBAC implementation.
         For now, all operations require a valid token (authentication only).
+        
+        Example RBAC implementation:
+            if operation == 'read':
+                # Read requires any authenticated user (no additional check needed)
+                # For stricter requirements, you could require specific roles:
+                # if not any(role in token.get('roles', []) for role in ['staff', 'admin', 'viewer']):
+                #     raise HTTPForbidden("Insufficient permissions to read consume documents")
+                pass
         """
         pass
     
