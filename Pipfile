@@ -6,9 +6,8 @@ name = "pypi"
 [packages]
 flask = "*"
 pymongo = "*"
-prometheus-flask-exporter = "*"
 pyjwt = "*"
-py-utils = {editable = true, git = "https://github.com/agile-crafts-people/api_utils.git", ref = "main"}
+api-utils = {editable = true, git = "https://github.com/agile-crafts-people/api_utils.git", ref = "main"}
 
 [dev-packages]
 pytest = "*"
