@@ -66,7 +66,7 @@ class ConsumeService:
             if name:
                 # Use regex for partial matching (case-insensitive)
                 query = {"name": {"$regex": name, "$options": "i"}}
-                consumes = mongo.find_documents(config.CONSUME_COLLECTION_NAME, query)
+                consumes = mongo.get_documents(config.CONSUME_COLLECTION_NAME, match=query)
                 logger.info(f"Retrieved {len(consumes)} consumes matching name '{name}' for user {token.get('user_id')}")
             else:
                 consumes = mongo.get_documents(config.CONSUME_COLLECTION_NAME)

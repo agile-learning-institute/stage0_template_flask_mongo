@@ -20,7 +20,7 @@
             "editable": true,
             "git": "https://github.com/agile-crafts-people/api_utils.git",
             "markers": "python_version >= '3.6'",
-            "ref": "5b4b6922e606ebadaf7adffe61be1375af12389f"
+            "ref": "f747b0f50f420fa6d42c3ab56f21d42a3a7d3bf4"
         },
         "blinker": {
             "hashes": [

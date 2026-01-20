@@ -128,7 +128,7 @@ class ControlService:
             if name:
                 # Use regex for partial matching (case-insensitive)
                 query = {"name": {"$regex": name, "$options": "i"}}
-                controls = mongo.find_documents(config.CONTROL_COLLECTION_NAME, query)
+                controls = mongo.get_documents(config.CONTROL_COLLECTION_NAME, match=query)
                 logger.info(f"Retrieved {len(controls)} controls matching name '{name}' for user {token.get('user_id')}")
             else:
                 controls = mongo.get_documents(config.CONTROL_COLLECTION_NAME)

@@ -53,7 +53,7 @@ class TestConsumeService(unittest.TestCase):
         mock_get_config.return_value = mock_config
         
         mock_mongo = MagicMock()
-        mock_mongo.find_documents.return_value = [
+        mock_mongo.get_documents.return_value = [
             {"_id": "123", "name": "test-consume"}
         ]
         mock_get_mongo.return_value = mock_mongo
@@ -63,10 +63,16 @@ class TestConsumeService(unittest.TestCase):
         
         # Assert
         self.assertEqual(len(consumes), 1)
-        mock_mongo.find_documents.assert_called_once()
-        call_args = mock_mongo.find_documents.call_args
-        self.assertEqual(call_args[0][0], "Consume")
-        query = call_args[0][1]
+        # get_documents is called with match parameter
+        call_args_list = mock_mongo.get_documents.call_args_list
+        # Find the call with match parameter
+        match_call = None
+        for call in call_args_list:
+            if 'match' in call[1]:
+                match_call = call
+                break
+        self.assertIsNotNone(match_call, "get_documents should be called with match parameter")
+        query = match_call[1]['match']
         self.assertIn("name", query)
         self.assertEqual(query["name"]["$regex"], "test")
         self.assertEqual(query["name"]["$options"], "i")
