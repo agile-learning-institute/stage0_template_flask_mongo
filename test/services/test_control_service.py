@@ -4,7 +4,7 @@ Unit tests for Control service.
 import unittest
 from unittest.mock import patch, MagicMock
 from src.services.control_service import ControlService
-from py_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound, HTTPInternalServerError
+from api_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound, HTTPInternalServerError
 
 
 class TestControlService(unittest.TestCase):
@@ -264,6 +264,74 @@ class TestControlService(unittest.TestCase):
         call_args = mock_mongo.update_document.call_args
         set_data = call_args[1]["set_data"]
         self.assertEqual(set_data["saved"]["Registry"], "127.0.0.1")
+    
+    @patch('src.services.control_service.Config.get_instance')
+    @patch('src.services.control_service.MongoIO.get_instance')
+    def test_create_control_handles_exception(self, mock_get_mongo, mock_get_config):
+        """Test create_control handles database exceptions."""
+        # Arrange
+        mock_config = MagicMock()
+        mock_config.CONTROL_COLLECTION_NAME = "Control"
+        mock_get_config.return_value = mock_config
+        
+        mock_mongo = MagicMock()
+        mock_mongo.create_document.side_effect = Exception("Database error")
+        mock_get_mongo.return_value = mock_mongo
+        
+        # Act & Assert
+        with self.assertRaises(HTTPInternalServerError):
+            ControlService.create_control({"name": "test"}, self.mock_token, self.mock_breadcrumb)
+    
+    @patch('src.services.control_service.Config.get_instance')
+    @patch('src.services.control_service.MongoIO.get_instance')
+    def test_get_controls_handles_exception(self, mock_get_mongo, mock_get_config):
+        """Test get_controls handles database exceptions."""
+        # Arrange
+        mock_config = MagicMock()
+        mock_config.CONTROL_COLLECTION_NAME = "Control"
+        mock_get_config.return_value = mock_config
+        
+        mock_mongo = MagicMock()
+        mock_mongo.get_documents.side_effect = Exception("Database error")
+        mock_get_mongo.return_value = mock_mongo
+        
+        # Act & Assert
+        with self.assertRaises(HTTPInternalServerError):
+            ControlService.get_controls(self.mock_token, self.mock_breadcrumb)
+    
+    @patch('src.services.control_service.Config.get_instance')
+    @patch('src.services.control_service.MongoIO.get_instance')
+    def test_get_control_handles_exception(self, mock_get_mongo, mock_get_config):
+        """Test get_control handles database exceptions."""
+        # Arrange
+        mock_config = MagicMock()
+        mock_config.CONTROL_COLLECTION_NAME = "Control"
+        mock_get_config.return_value = mock_config
+        
+        mock_mongo = MagicMock()
+        mock_mongo.get_document.side_effect = Exception("Database error")
+        mock_get_mongo.return_value = mock_mongo
+        
+        # Act & Assert
+        with self.assertRaises(HTTPInternalServerError):
+            ControlService.get_control("123", self.mock_token, self.mock_breadcrumb)
+    
+    @patch('src.services.control_service.Config.get_instance')
+    @patch('src.services.control_service.MongoIO.get_instance')
+    def test_update_control_handles_exception(self, mock_get_mongo, mock_get_config):
+        """Test update_control handles database exceptions."""
+        # Arrange
+        mock_config = MagicMock()
+        mock_config.CONTROL_COLLECTION_NAME = "Control"
+        mock_get_config.return_value = mock_config
+        
+        mock_mongo = MagicMock()
+        mock_mongo.update_document.side_effect = Exception("Database error")
+        mock_get_mongo.return_value = mock_mongo
+        
+        # Act & Assert
+        with self.assertRaises(HTTPInternalServerError):
+            ControlService.update_control("123", {"name": "updated"}, self.mock_token, self.mock_breadcrumb)
 
 
 if __name__ == '__main__':

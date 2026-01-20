@@ -8,9 +8,9 @@ Provides endpoints for Control domain:
 - PATCH /api/control/<id> - Update a control document
 """
 from flask import Blueprint, jsonify, request
-from py_utils.flask_utils.token import create_flask_token
-from py_utils.flask_utils.breadcrumb import create_flask_breadcrumb
-from py_utils.flask_utils.route_wrapper import handle_route_exceptions
+from api_utils.flask_utils.token import create_flask_token
+from api_utils.flask_utils.breadcrumb import create_flask_breadcrumb
+from api_utils.flask_utils.route_wrapper import handle_route_exceptions
 from src.services.control_service import ControlService
 
 import logging

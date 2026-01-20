@@ -24,14 +24,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Initialize Config Singleton and MongoIO Singleton
-from py_utils import Config, MongoIO
+from api_utils import Config, MongoIO
 config = Config.get_instance()
 mongo = MongoIO.get_instance()
 config.set_enumerators(mongo.get_documents(config.ENUMERATORS_COLLECTION_NAME))
 config.set_versions(mongo.get_documents(config.VERSIONS_COLLECTION_NAME))
 
 # Initialize Flask App
-from py_utils import MongoJSONEncoder
+from api_utils import MongoJSONEncoder
 from prometheus_flask_exporter import PrometheusMetrics
 
 app = Flask(__name__)
@@ -43,12 +43,12 @@ metrics = PrometheusMetrics(app)
 # Register Routes
 logger.info("Registering Routes")
 
-from py_utils import create_config_routes
+from api_utils import create_config_routes
 app.register_blueprint(create_config_routes(), url_prefix='/api/config')
 logger.info("  /api/config")
 
 if config.ENABLE_LOGIN:
-    from py_utils import create_dev_login_routes
+    from api_utils import create_dev_login_routes
     app.register_blueprint(create_dev_login_routes())
     logger.info("  /dev-login")
 

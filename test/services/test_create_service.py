@@ -4,7 +4,7 @@ Unit tests for Create service.
 import unittest
 from unittest.mock import patch, MagicMock
 from src.services.create_service import CreateService
-from py_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound, HTTPInternalServerError
+from api_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound, HTTPInternalServerError
 
 
 class TestCreateService(unittest.TestCase):
@@ -176,6 +176,40 @@ class TestCreateService(unittest.TestCase):
         # Act & Assert
         with self.assertRaises(HTTPInternalServerError):
             CreateService.get_creates(self.mock_token, self.mock_breadcrumb)
+    
+    @patch('src.services.create_service.Config.get_instance')
+    @patch('src.services.create_service.MongoIO.get_instance')
+    def test_create_create_handles_exception(self, mock_get_mongo, mock_get_config):
+        """Test create_create handles database exceptions."""
+        # Arrange
+        mock_config = MagicMock()
+        mock_config.CREATE_COLLECTION_NAME = "Create"
+        mock_get_config.return_value = mock_config
+        
+        mock_mongo = MagicMock()
+        mock_mongo.create_document.side_effect = Exception("Database error")
+        mock_get_mongo.return_value = mock_mongo
+        
+        # Act & Assert
+        with self.assertRaises(HTTPInternalServerError):
+            CreateService.create_create({"name": "test"}, self.mock_token, self.mock_breadcrumb)
+    
+    @patch('src.services.create_service.Config.get_instance')
+    @patch('src.services.create_service.MongoIO.get_instance')
+    def test_get_create_handles_exception(self, mock_get_mongo, mock_get_config):
+        """Test get_create handles database exceptions."""
+        # Arrange
+        mock_config = MagicMock()
+        mock_config.CREATE_COLLECTION_NAME = "Create"
+        mock_get_config.return_value = mock_config
+        
+        mock_mongo = MagicMock()
+        mock_mongo.get_document.side_effect = Exception("Database error")
+        mock_get_mongo.return_value = mock_mongo
+        
+        # Act & Assert
+        with self.assertRaises(HTTPInternalServerError):
+            CreateService.get_create("123", self.mock_token, self.mock_breadcrumb)
 
 
 if __name__ == '__main__':

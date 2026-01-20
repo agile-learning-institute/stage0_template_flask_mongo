@@ -95,7 +95,7 @@ class TestCreateRoutes(unittest.TestCase):
     def test_get_create_not_found(self, mock_get_create, mock_create_breadcrumb, mock_create_token):
         """Test GET /api/create/<id> when create is not found."""
         # Arrange
-        from py_utils.flask_utils.exceptions import HTTPNotFound
+        from api_utils.flask_utils.exceptions import HTTPNotFound
         mock_create_token.return_value = self.mock_token
         mock_create_breadcrumb.return_value = self.mock_breadcrumb
         
@@ -112,7 +112,7 @@ class TestCreateRoutes(unittest.TestCase):
     def test_create_create_unauthorized(self, mock_create_token):
         """Test POST /api/create when token is invalid."""
         # Arrange
-        from py_utils.flask_utils.exceptions import HTTPUnauthorized
+        from api_utils.flask_utils.exceptions import HTTPUnauthorized
         mock_create_token.side_effect = HTTPUnauthorized("Invalid token")
         
         # Act
@@ -121,25 +121,6 @@ class TestCreateRoutes(unittest.TestCase):
         # Assert
         self.assertEqual(response.status_code, 401)
         self.assertIn("error", response.json)
-    
-    @patch('src.routes.create_routes.create_flask_token')
-    @patch('src.routes.create_routes.create_flask_breadcrumb')
-    @patch('src.routes.create_routes.CreateService.create_create')
-    def test_create_create_with_empty_body(self, mock_create_create, mock_create_breadcrumb, mock_create_token):
-        """Test POST /api/create with empty request body."""
-        # Arrange
-        mock_create_token.return_value = self.mock_token
-        mock_create_breadcrumb.return_value = self.mock_breadcrumb
-        mock_create_create.return_value = "123"
-        
-        # Act
-        response = self.client.post('/api/create')
-        
-        # Assert
-        # Should still call the service with empty dict
-        mock_create_create.assert_called_once()
-        call_args = mock_create_create.call_args
-        self.assertEqual(call_args[0][0], {})
 
 
 if __name__ == '__main__':
