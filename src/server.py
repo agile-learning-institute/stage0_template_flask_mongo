@@ -45,48 +45,25 @@ app.json = MongoJSONEncoder(app)
 from api_utils import (
     create_metric_routes,
     create_dev_login_routes,
-    create_config_routes
+    create_config_routes,
+    create_explorer_routes
 )
 from src.routes.control_routes import create_control_routes
 from src.routes.create_routes import create_create_routes
 from src.routes.consume_routes import create_consume_routes
 
 # Register route blueprints
+app.register_blueprint(create_explorer_routes(), url_prefix='/docs')
 app.register_blueprint(create_config_routes(), url_prefix='/api/config')
-if config.ENABLE_LOGIN:
-    app.register_blueprint(create_dev_login_routes(), url_prefix='/dev-login')
+app.register_blueprint(create_dev_login_routes(), url_prefix='/dev-login')
 app.register_blueprint(create_control_routes(), url_prefix='/api/control')
 app.register_blueprint(create_create_routes(), url_prefix='/api/create')
 app.register_blueprint(create_consume_routes(), url_prefix='/api/consume')
 metrics = create_metric_routes(app)  # This exposes /metrics endpoint
 
-# Serve static documentation files from docs directory
-# Use absolute path based on working directory (PYTHONPATH) for reliability in containers
-BASE_DIR = os.environ.get('PYTHONPATH', os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DOCS_DIR = os.path.join(BASE_DIR, 'docs')
-
-# Ensure docs directory exists and log the path for debugging
-if not os.path.exists(DOCS_DIR):
-    logger.warning(f"Docs directory not found at {DOCS_DIR}, trying alternative path calculation")
-    # Fallback to relative path calculation
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    DOCS_DIR = os.path.join(BASE_DIR, 'docs')
-
-@app.route('/docs')
-@app.route('/docs/')
-def serve_docs_root():
-    """Serve the API explorer at /docs root."""
-    return send_from_directory(DOCS_DIR, 'explorer.html')
-
-@app.route('/docs/<path:filename>')
-def serve_docs(filename):
-    """Serve static files from the docs directory."""
-    return send_from_directory(DOCS_DIR, filename)
-
 logger.info("============= Routes Registered ===============")
 logger.info("  /api/config - Configuration endpoint")
-if config.ENABLE_LOGIN:
-    logger.info("  /dev-login - Dev Login (returns 404 if disabled)")
+logger.info("  /dev-login - Dev Login (returns 404 if disabled)")
 logger.info("  /api/control - Control domain endpoints")
 logger.info("  /api/create - Create domain endpoints")
 logger.info("  /api/consume - Consume domain endpoints")
