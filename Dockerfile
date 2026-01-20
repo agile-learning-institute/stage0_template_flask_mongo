@@ -27,6 +27,9 @@ RUN if [ -n "$GITHUB_TOKEN" ]; then \
 # Copy source code
 COPY src/ ./src/
 
+# Copy API Explorer files
+COPY docs/ ./docs/
+
 # Generate build timestamp (for consistency with other systems)
 RUN DATE=$(date +'%Y%m%d-%H%M%S') && \
     echo "${DATE}" > /app/BUILT_AT

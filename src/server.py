@@ -18,6 +18,8 @@ import sys
 import os
 import signal
 from flask import Flask, send_from_directory
+import logging
+logger = logging.getLogger(__name__)
 
 # Initialize Config Singleton and MongoIO Singleton
 from py_utils import Config, MongoIO
@@ -25,9 +27,6 @@ config = Config.get_instance()
 mongo = MongoIO.get_instance()
 config.set_enumerators(mongo.get_documents(config.ENUMERATORS_COLLECTION_NAME))
 config.set_versions(mongo.get_documents(config.VERSIONS_COLLECTION_NAME))
-
-import logging
-logger = logging.getLogger(__name__)
 
 # Initialize Flask App
 from py_utils import MongoJSONEncoder
@@ -60,9 +59,21 @@ app.register_blueprint(create_testrun_routes(), url_prefix='/api/testrun')
 logger.info("  /api/testrun")
 
 # Serve static documentation files from docs directory
-# Get the directory where this file is located, then go up one level to project root
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Use absolute path based on working directory (PYTHONPATH) for reliability in containers
+BASE_DIR = os.environ.get('PYTHONPATH', os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DOCS_DIR = os.path.join(BASE_DIR, 'docs')
+
+# Ensure docs directory exists and log the path for debugging
+if not os.path.exists(DOCS_DIR):
+    logger.warning(f"Docs directory not found at {DOCS_DIR}, trying alternative path calculation")
+    # Fallback to relative path calculation
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    DOCS_DIR = os.path.join(BASE_DIR, 'docs')
+    
+if os.path.exists(DOCS_DIR):
+    logger.info(f"Serving docs from: {DOCS_DIR}")
+else:
+    logger.error(f"Docs directory not found at {DOCS_DIR}")
 
 @app.route('/docs/<path:filename>')
 def serve_docs(filename):

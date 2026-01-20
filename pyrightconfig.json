@@ -1,0 +1,14 @@
+{
+  "venvPath": "/Users/mikestorey/.local/share/virtualenvs",
+  "venv": "template_flask_mongo-JBkO24IU",
+  "pythonVersion": "3.12",
+  "pythonPlatform": "Darwin",
+  "extraPaths": [
+    "src",
+    "../api_utils"
+  ],
+  "typeCheckingMode": "basic",
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false
+}
+
