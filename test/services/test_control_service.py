@@ -4,7 +4,7 @@ Unit tests for Control service.
 import unittest
 from unittest.mock import patch, MagicMock
 from src.services.control_service import ControlService
-from py_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound, HTTPInternalServerError
+from api_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound, HTTPInternalServerError
 
 
 class TestControlService(unittest.TestCase):

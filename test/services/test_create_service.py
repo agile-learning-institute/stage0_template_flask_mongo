@@ -4,7 +4,7 @@ Unit tests for Create service.
 import unittest
 from unittest.mock import patch, MagicMock
 from src.services.create_service import CreateService
-from py_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound, HTTPInternalServerError
+from api_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound, HTTPInternalServerError
 
 
 class TestCreateService(unittest.TestCase):

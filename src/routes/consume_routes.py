@@ -6,9 +6,9 @@ Provides endpoints for Consume domain:
 - GET /api/consume/<id> - Get a specific consume document by ID
 """
 from flask import Blueprint, jsonify, request
-from py_utils.flask_utils.token import create_flask_token
-from py_utils.flask_utils.breadcrumb import create_flask_breadcrumb
-from py_utils.flask_utils.route_wrapper import handle_route_exceptions
+from api_utils.flask_utils.token import create_flask_token
+from api_utils.flask_utils.breadcrumb import create_flask_breadcrumb
+from api_utils.flask_utils.route_wrapper import handle_route_exceptions
 from src.services.consume_service import ConsumeService
 
 import logging
