@@ -1,10 +1,11 @@
 """
 Flask MongoDB API Template Server
 
-This is a minimal Flask + MongoDB API that follows patterns established in api_utils.
-It implements two domains:
-- Grade: GET one, GET many endpoints
-- TestRun: POST, GET one, GET many, PATCH endpoints
+This is a Flask + MongoDB API template that follows patterns established in api_utils.
+It implements three domains following the Creator Dashboard architecture:
+- Control: POST, GET many (with name query), GET one, PATCH one endpoints
+- Create: POST, GET many, GET one endpoints
+- Consume: GET many, GET one endpoints (read-only)
 
 This server demonstrates:
 - Config singleton initialization
@@ -13,6 +14,7 @@ This server demonstrates:
 - Prometheus metrics integration
 - JWT token authentication and authorization
 - Graceful shutdown handling
+- RBAC placeholder pattern for future implementation
 """
 import sys
 import os
@@ -50,13 +52,17 @@ if config.ENABLE_LOGIN:
     app.register_blueprint(create_dev_login_routes())
     logger.info("  /dev-login")
 
-from src.routes.grade_routes import create_grade_routes
-app.register_blueprint(create_grade_routes(), url_prefix='/api/grade')
-logger.info("  /api/grade")
+from src.routes.control_routes import create_control_routes
+app.register_blueprint(create_control_routes(), url_prefix='/api/control')
+logger.info("  /api/control")
 
-from src.routes.testrun_routes import create_testrun_routes
-app.register_blueprint(create_testrun_routes(), url_prefix='/api/testrun')
-logger.info("  /api/testrun")
+from src.routes.create_routes import create_create_routes
+app.register_blueprint(create_create_routes(), url_prefix='/api/create')
+logger.info("  /api/create")
+
+from src.routes.consume_routes import create_consume_routes
+app.register_blueprint(create_consume_routes(), url_prefix='/api/consume')
+logger.info("  /api/consume")
 
 # Serve static documentation files from docs directory
 # Use absolute path based on working directory (PYTHONPATH) for reliability in containers
@@ -107,7 +113,7 @@ signal.signal(signal.SIGINT, handle_exit)
 
 # Expose app for Gunicorn or direct execution
 if __name__ == "__main__":
-    api_port = config.EVALUATOR_API_PORT
+    api_port = config.TEMPLATE_API_PORT
     logger.info(f"Starting Flask server on port {api_port}")
     app.run(host="0.0.0.0", port=api_port, debug=False)
 
