@@ -53,7 +53,9 @@ from src.routes.create_routes import create_create_routes
 from src.routes.consume_routes import create_consume_routes
 
 # Register route blueprints
-app.register_blueprint(create_explorer_routes(), url_prefix='/docs')
+# Register explorer routes with template's docs directory
+docs_dir = os.path.join(os.path.dirname(__file__), '..', 'docs')
+app.register_blueprint(create_explorer_routes(docs_dir), url_prefix='/docs')
 app.register_blueprint(create_config_routes(), url_prefix='/api/config')
 app.register_blueprint(create_dev_login_routes(), url_prefix='/dev-login')
 app.register_blueprint(create_control_routes(), url_prefix='/api/control')
