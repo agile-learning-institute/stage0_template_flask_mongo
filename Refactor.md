@@ -398,13 +398,12 @@ return {
 - Invalid after_id format (not valid ObjectId) → `HTTPBadRequest`
 
 **Exception handling:**
-- **Phase 1:** Create temporary `HTTPBadRequest` exception class in service file (or use existing pattern)
-- **Phase 3:** Replace with `HTTPBadRequest` from `api_utils/api_utils/flask_utils/exceptions.py`
+- **Phase 1:** Use local `HTTPBadRequest` exception from `src.utils.exceptions` module (allows testing before harvesting to api_utils)
+- **Phase 3:** Replace imports with `HTTPBadRequest` from `api_utils/api_utils/flask_utils/exceptions.py` and remove local module
 
-**Example exception class (Phase 1 - temporary):**
+**Phase 1 implementation (local module):**
 ```python
-# In src/services/control_service.py (temporary, until Phase 3)
-# Or import from api_utils if it already exists
+# src/utils/exceptions.py (local implementation for Phase 1)
 class HTTPBadRequest(Exception):
     status_code = 400
     message = "Bad Request"
@@ -413,6 +412,9 @@ class HTTPBadRequest(Exception):
         if message:
             self.message = message
         super().__init__(self.message)
+
+# Usage in services:
+from src.utils.exceptions import HTTPBadRequest
 ```
 
 **Exception handling in route wrapper:**
@@ -488,13 +490,16 @@ GET /api/control  # Returns infinite scroll format (no backward compatibility)
 
 ### Phase 3: Extract to api_utils (After Everything Works)
 1. Identify reusable code patterns from Phase 1 implementation
-2. Update `api_utils/api_utils/flask_utils/exceptions.py` to add `HTTPBadRequest` exception
+2. **HTTPBadRequest exception**: Already exists in `api_utils/api_utils/flask_utils/exceptions.py` (added during Phase 1). Phase 3 will update imports in template API from `src.utils.exceptions` to `api_utils.flask_utils.exceptions`
 3. Create `api_utils/api_utils/mongo_utils/infinite_scroll.py` module
 4. Extract `build_infinite_scroll_query()` and `execute_infinite_scroll_query()` functions
-5. Refactor template API to use extracted utilities and `HTTPBadRequest` from api_utils
-6. Update other APIs to use the utilities
-7. Add unit tests for api_utils utilities
-8. Update documentation
+5. Refactor template API to use extracted utilities and `HTTPBadRequest` from api_utils (replace local `src.utils.exceptions` imports)
+6. Remove local `src/utils/exceptions.py` after migration
+7. Update other APIs to use the utilities
+8. Add unit tests for api_utils utilities
+9. Update documentation
+
+**Note:** Phase 1 uses local implementation (`src/utils/exceptions.py`) for `HTTPBadRequest` to allow testing before harvesting to api_utils. This ensures the implementation is proven before making it a shared dependency.
 
 **Why this order?**
 - Build it concretely first, understand what works
