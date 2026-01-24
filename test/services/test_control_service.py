@@ -3,8 +3,9 @@ Unit tests for Control service.
 """
 import unittest
 from unittest.mock import patch, MagicMock
+from bson import ObjectId
 from src.services.control_service import ControlService
-from api_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound, HTTPInternalServerError
+from api_utils.flask_utils.exceptions import HTTPBadRequest, HTTPForbidden, HTTPNotFound, HTTPInternalServerError
 
 
 class TestControlService(unittest.TestCase):
@@ -73,26 +74,42 @@ class TestControlService(unittest.TestCase):
     
     @patch('src.services.control_service.Config.get_instance')
     @patch('src.services.control_service.MongoIO.get_instance')
-    def test_get_controls_no_filter(self, mock_get_mongo, mock_get_config):
-        """Test successful retrieval of all control documents."""
+    def test_get_controls_first_batch(self, mock_get_mongo, mock_get_config):
+        """Test successful retrieval of first batch (no cursor)."""
         # Arrange
         mock_config = MagicMock()
         mock_config.CONTROL_COLLECTION_NAME = "Control"
         mock_get_config.return_value = mock_config
         
+        mock_collection = MagicMock()
+        mock_cursor = MagicMock()
+        mock_collection.find.return_value = mock_cursor
+        mock_cursor.sort.return_value = mock_cursor
+        mock_cursor.limit.return_value = mock_cursor
+        mock_cursor.__iter__ = lambda self: iter([
+            {"_id": ObjectId("507f1f77bcf86cd799439011"), "name": "control1"},
+            {"_id": ObjectId("507f1f77bcf86cd799439012"), "name": "control2"}
+        ])
+        
         mock_mongo = MagicMock()
-        mock_mongo.get_documents.return_value = [
-            {"_id": "123", "name": "control1"},
-            {"_id": "456", "name": "control2"}
-        ]
+        mock_mongo.get_collection.return_value = mock_collection
         mock_get_mongo.return_value = mock_mongo
         
         # Act
-        controls = ControlService.get_controls(self.mock_token, self.mock_breadcrumb)
+        result = ControlService.get_controls(self.mock_token, self.mock_breadcrumb, limit=10)
         
         # Assert
-        self.assertEqual(len(controls), 2)
-        mock_mongo.get_documents.assert_called_once_with("Control")
+        self.assertIn('items', result)
+        self.assertIn('limit', result)
+        self.assertIn('has_more', result)
+        self.assertIn('next_cursor', result)
+        self.assertEqual(len(result['items']), 2)
+        self.assertEqual(result['limit'], 10)
+        self.assertFalse(result['has_more'])
+        self.assertIsNone(result['next_cursor'])
+        mock_collection.find.assert_called_once()
+        mock_cursor.sort.assert_called_once()
+        mock_cursor.limit.assert_called_once_with(11)  # limit + 1
     
     @patch('src.services.control_service.Config.get_instance')
     @patch('src.services.control_service.MongoIO.get_instance')
@@ -103,30 +120,126 @@ class TestControlService(unittest.TestCase):
         mock_config.CONTROL_COLLECTION_NAME = "Control"
         mock_get_config.return_value = mock_config
         
+        mock_collection = MagicMock()
+        mock_cursor = MagicMock()
+        mock_collection.find.return_value = mock_cursor
+        mock_cursor.sort.return_value = mock_cursor
+        mock_cursor.limit.return_value = mock_cursor
+        mock_cursor.__iter__ = lambda self: iter([
+            {"_id": ObjectId("507f1f77bcf86cd799439011"), "name": "test-control"}
+        ])
+        
         mock_mongo = MagicMock()
-        mock_mongo.get_documents.return_value = [
-            {"_id": "123", "name": "test-control"}
-        ]
+        mock_mongo.get_collection.return_value = mock_collection
         mock_get_mongo.return_value = mock_mongo
         
         # Act
-        controls = ControlService.get_controls(self.mock_token, self.mock_breadcrumb, name="test")
+        result = ControlService.get_controls(self.mock_token, self.mock_breadcrumb, name="test")
         
         # Assert
-        self.assertEqual(len(controls), 1)
-        # get_documents is called with match parameter
-        call_args_list = mock_mongo.get_documents.call_args_list
-        # Find the call with match parameter
-        match_call = None
-        for call in call_args_list:
-            if 'match' in call[1]:
-                match_call = call
-                break
-        self.assertIsNotNone(match_call, "get_documents should be called with match parameter")
-        query = match_call[1]['match']
-        self.assertIn("name", query)
-        self.assertEqual(query["name"]["$regex"], "test")
-        self.assertEqual(query["name"]["$options"], "i")
+        self.assertEqual(len(result['items']), 1)
+        # Verify find was called with name filter
+        find_call = mock_collection.find.call_args[0][0]
+        self.assertIn("name", find_call)
+        self.assertEqual(find_call["name"]["$regex"], "test")
+        self.assertEqual(find_call["name"]["$options"], "i")
+    
+    @patch('src.services.control_service.Config.get_instance')
+    @patch('src.services.control_service.MongoIO.get_instance')
+    def test_get_controls_with_cursor(self, mock_get_mongo, mock_get_config):
+        """Test retrieval with cursor (after_id)."""
+        # Arrange
+        mock_config = MagicMock()
+        mock_config.CONTROL_COLLECTION_NAME = "Control"
+        mock_get_config.return_value = mock_config
+        
+        after_id = "507f1f77bcf86cd799439011"
+        mock_collection = MagicMock()
+        mock_cursor = MagicMock()
+        mock_collection.find.return_value = mock_cursor
+        mock_cursor.sort.return_value = mock_cursor
+        mock_cursor.limit.return_value = mock_cursor
+        mock_cursor.__iter__ = lambda self: iter([
+            {"_id": ObjectId("507f1f77bcf86cd799439012"), "name": "control2"},
+            {"_id": ObjectId("507f1f77bcf86cd799439013"), "name": "control3"}
+        ])
+        
+        mock_mongo = MagicMock()
+        mock_mongo.get_collection.return_value = mock_collection
+        mock_get_mongo.return_value = mock_mongo
+        
+        # Act
+        result = ControlService.get_controls(self.mock_token, self.mock_breadcrumb, after_id=after_id, limit=10)
+        
+        # Assert
+        self.assertEqual(len(result['items']), 2)
+        # Verify find was called with _id filter for ascending order
+        find_call = mock_collection.find.call_args[0][0]
+        self.assertIn("_id", find_call)
+        self.assertIn("$gt", find_call["_id"])
+    
+    @patch('src.services.control_service.Config.get_instance')
+    @patch('src.services.control_service.MongoIO.get_instance')
+    def test_get_controls_has_more(self, mock_get_mongo, mock_get_config):
+        """Test has_more flag when more items exist."""
+        # Arrange
+        mock_config = MagicMock()
+        mock_config.CONTROL_COLLECTION_NAME = "Control"
+        mock_get_config.return_value = mock_config
+        
+        mock_collection = MagicMock()
+        mock_cursor = MagicMock()
+        mock_collection.find.return_value = mock_cursor
+        mock_cursor.sort.return_value = mock_cursor
+        mock_cursor.limit.return_value = mock_cursor
+        # Return 11 items (limit + 1) to trigger has_more
+        mock_cursor.__iter__ = lambda self: iter([
+            {"_id": ObjectId(f"507f1f77bcf86cd7994390{i:02d}"), "name": f"control{i}"}
+            for i in range(11)
+        ])
+        
+        mock_mongo = MagicMock()
+        mock_mongo.get_collection.return_value = mock_collection
+        mock_get_mongo.return_value = mock_mongo
+        
+        # Act
+        result = ControlService.get_controls(self.mock_token, self.mock_breadcrumb, limit=10)
+        
+        # Assert
+        self.assertEqual(len(result['items']), 10)  # Should be truncated to limit
+        self.assertTrue(result['has_more'])
+        self.assertIsNotNone(result['next_cursor'])
+        self.assertEqual(result['next_cursor'], str(ObjectId("507f1f77bcf86cd79943900a")))
+    
+    def test_get_controls_invalid_limit_too_small(self):
+        """Test get_controls raises HTTPBadRequest for limit < 1."""
+        with self.assertRaises(HTTPBadRequest) as context:
+            ControlService.get_controls(self.mock_token, self.mock_breadcrumb, limit=0)
+        self.assertIn("limit must be >= 1", str(context.exception))
+    
+    def test_get_controls_invalid_limit_too_large(self):
+        """Test get_controls raises HTTPBadRequest for limit > 100."""
+        with self.assertRaises(HTTPBadRequest) as context:
+            ControlService.get_controls(self.mock_token, self.mock_breadcrumb, limit=101)
+        self.assertIn("limit must be <= 100", str(context.exception))
+    
+    def test_get_controls_invalid_sort_by(self):
+        """Test get_controls raises HTTPBadRequest for invalid sort_by."""
+        with self.assertRaises(HTTPBadRequest) as context:
+            ControlService.get_controls(self.mock_token, self.mock_breadcrumb, sort_by='invalid_field')
+        self.assertIn("sort_by must be one of", str(context.exception))
+    
+    def test_get_controls_invalid_order(self):
+        """Test get_controls raises HTTPBadRequest for invalid order."""
+        with self.assertRaises(HTTPBadRequest) as context:
+            ControlService.get_controls(self.mock_token, self.mock_breadcrumb, order='invalid')
+        self.assertIn("order must be 'asc' or 'desc'", str(context.exception))
+    
+    def test_get_controls_invalid_after_id(self):
+        """Test get_controls raises HTTPBadRequest for invalid after_id."""
+        with self.assertRaises(HTTPBadRequest) as context:
+            ControlService.get_controls(self.mock_token, self.mock_breadcrumb, after_id='invalid')
+        self.assertIn("after_id must be a valid MongoDB ObjectId", str(context.exception))
     
     @patch('src.services.control_service.Config.get_instance')
     @patch('src.services.control_service.MongoIO.get_instance')
@@ -300,8 +413,11 @@ class TestControlService(unittest.TestCase):
         mock_config.CONTROL_COLLECTION_NAME = "Control"
         mock_get_config.return_value = mock_config
         
+        mock_collection = MagicMock()
+        mock_collection.find.side_effect = Exception("Database error")
+        
         mock_mongo = MagicMock()
-        mock_mongo.get_documents.side_effect = Exception("Database error")
+        mock_mongo.get_collection.return_value = mock_collection
         mock_get_mongo.return_value = mock_mongo
         
         # Act & Assert
