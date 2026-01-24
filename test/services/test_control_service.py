@@ -5,7 +5,8 @@ import unittest
 from unittest.mock import patch, MagicMock
 from bson import ObjectId
 from src.services.control_service import ControlService
-from api_utils.flask_utils.exceptions import HTTPBadRequest, HTTPForbidden, HTTPNotFound, HTTPInternalServerError
+from api_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound, HTTPInternalServerError
+from src.utils.exceptions import HTTPBadRequest
 
 
 class TestControlService(unittest.TestCase):

@@ -4,7 +4,8 @@ Control service for business logic and RBAC.
 Handles RBAC checks and MongoDB operations for Control domain.
 """
 from api_utils import MongoIO, Config
-from api_utils.flask_utils.exceptions import HTTPBadRequest, HTTPForbidden, HTTPNotFound, HTTPInternalServerError
+from api_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound, HTTPInternalServerError
+from src.utils.exceptions import HTTPBadRequest
 from bson import ObjectId
 from bson.errors import InvalidId
 import logging
