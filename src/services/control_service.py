@@ -4,12 +4,15 @@ Control service for business logic and RBAC.
 Handles RBAC checks and MongoDB operations for Control domain.
 """
 from api_utils import MongoIO, Config
-from api_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound, HTTPInternalServerError
+from api_utils.flask_utils.exceptions import HTTPBadRequest, HTTPForbidden, HTTPNotFound, HTTPInternalServerError
 from bson import ObjectId
 from bson.errors import InvalidId
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Allowed sort fields for Control domain
+ALLOWED_SORT_FIELDS = ['name', 'description', 'status', 'created.at_time', 'saved.at_time']
 
 
 class ControlService:
@@ -108,33 +111,97 @@ class ControlService:
             raise HTTPInternalServerError(f"Failed to create control: {error_msg}")
     
     @staticmethod
-    def get_controls(token, breadcrumb, name=None):
+    def get_controls(token, breadcrumb, name=None, after_id=None, limit=10, sort_by='name', order='asc'):
         """
-        Retrieve all control documents, optionally filtered by name.
+        Get infinite scroll batch of sorted, filtered control documents.
         
         Args:
-            token: Token dictionary with user_id and roles
-            breadcrumb: Breadcrumb dictionary for logging
-            name: Optional name filter (supports partial matches)
-            
+            token: Authentication token
+            breadcrumb: Audit breadcrumb
+            name: Optional name filter (simple search)
+            after_id: Cursor (ID of last item from previous batch, None for first request)
+            limit: Items per batch
+            sort_by: Field to sort by
+            order: Sort order ('asc' or 'desc')
+        
         Returns:
-            list: List of control documents matching the criteria
+            dict: {
+                'items': [...],
+                'limit': int,
+                'has_more': bool,
+                'next_cursor': str|None  # ID of last item, or None if no more
+            }
+        
+        Raises:
+            HTTPBadRequest: If invalid parameters provided
         """
         try:
             ControlService._check_permission(token, 'read')
+            
+            # Validate inputs - raise exceptions for invalid values
+            if limit < 1:
+                raise HTTPBadRequest("limit must be >= 1")
+            if limit > 100:
+                raise HTTPBadRequest("limit must be <= 100")
+            if sort_by not in ALLOWED_SORT_FIELDS:
+                raise HTTPBadRequest(f"sort_by must be one of: {', '.join(ALLOWED_SORT_FIELDS)}")
+            if order not in ['asc', 'desc']:
+                raise HTTPBadRequest("order must be 'asc' or 'desc'")
+            
+            # Validate after_id format if provided
+            if after_id:
+                try:
+                    ObjectId(after_id)
+                except (InvalidId, TypeError):
+                    raise HTTPBadRequest("after_id must be a valid MongoDB ObjectId")
+            
+            # Build filter query
+            filter_query = {}
+            
+            # Simple name search (minimal - can be extended later)
+            if name:
+                filter_query['name'] = {'$regex': name, '$options': 'i'}
+            
+            # Add cursor filter if provided (for infinite scroll)
+            if after_id:
+                # For ascending order: get items with _id > after_id
+                # For descending order: get items with _id < after_id
+                if order == 'asc':
+                    filter_query['_id'] = {'$gt': ObjectId(after_id)}
+                else:
+                    filter_query['_id'] = {'$lt': ObjectId(after_id)}
+            
+            # Build sort query - handle nested fields with dot notation
+            sort_direction = 1 if order == 'asc' else -1
+            sort_query = [(sort_by, sort_direction)]
+            
+            # Get collection and execute query
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
+            collection = mongo.get_collection(config.CONTROL_COLLECTION_NAME)
             
-            if name:
-                # Use regex for partial matching (case-insensitive)
-                query = {"name": {"$regex": name, "$options": "i"}}
-                controls = mongo.get_documents(config.CONTROL_COLLECTION_NAME, match=query)
-                logger.info(f"Retrieved {len(controls)} controls matching name '{name}' for user {token.get('user_id')}")
+            # Execute query - fetch one extra to check if there are more items
+            cursor = collection.find(filter_query).sort(sort_query).limit(limit + 1)
+            items = list(cursor)
+            
+            # Check if there are more items
+            has_more = len(items) > limit
+            if has_more:
+                items = items[:limit]  # Remove the extra item
+                next_cursor = str(items[-1]['_id'])  # ID of last item
             else:
-                controls = mongo.get_documents(config.CONTROL_COLLECTION_NAME)
-                logger.info(f"Retrieved {len(controls)} controls for user {token.get('user_id')}")
+                next_cursor = None
             
-            return controls
+            logger.info(f"Retrieved {len(items)} controls (has_more={has_more}) for user {token.get('user_id')}")
+            
+            return {
+                'items': items,
+                'limit': limit,
+                'has_more': has_more,
+                'next_cursor': next_cursor
+            }
+        except HTTPBadRequest:
+            raise
         except Exception as e:
             logger.error(f"Error retrieving controls: {str(e)}")
             raise HTTPInternalServerError("Failed to retrieve controls")
