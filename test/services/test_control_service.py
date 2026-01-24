@@ -193,10 +193,11 @@ class TestControlService(unittest.TestCase):
         mock_cursor.sort.return_value = mock_cursor
         mock_cursor.limit.return_value = mock_cursor
         # Return 11 items (limit + 1) to trigger has_more
-        mock_cursor.__iter__ = lambda self: iter([
+        items = [
             {"_id": ObjectId(f"507f1f77bcf86cd7994390{i:02d}"), "name": f"control{i}"}
             for i in range(11)
-        ])
+        ]
+        mock_cursor.__iter__ = lambda self: iter(items)
         
         mock_mongo = MagicMock()
         mock_mongo.get_collection.return_value = mock_collection
@@ -209,7 +210,8 @@ class TestControlService(unittest.TestCase):
         self.assertEqual(len(result['items']), 10)  # Should be truncated to limit
         self.assertTrue(result['has_more'])
         self.assertIsNotNone(result['next_cursor'])
-        self.assertEqual(result['next_cursor'], str(ObjectId("507f1f77bcf86cd79943900a")))
+        # The next_cursor should be the ID of the 10th item (index 9)
+        self.assertEqual(result['next_cursor'], str(items[9]['_id']))
     
     def test_get_controls_invalid_limit_too_small(self):
         """Test get_controls raises HTTPBadRequest for limit < 1."""

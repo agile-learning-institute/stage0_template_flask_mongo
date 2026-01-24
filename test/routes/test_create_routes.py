@@ -54,10 +54,15 @@ class TestCreateRoutes(unittest.TestCase):
         mock_create_token.return_value = self.mock_token
         mock_create_breadcrumb.return_value = self.mock_breadcrumb
         
-        mock_get_creates.return_value = [
-            {"_id": "123", "name": "create1"},
-            {"_id": "456", "name": "create2"}
-        ]
+        mock_get_creates.return_value = {
+            'items': [
+                {"_id": "123", "name": "create1"},
+                {"_id": "456", "name": "create2"}
+            ],
+            'limit': 10,
+            'has_more': False,
+            'next_cursor': None
+        }
         
         # Act
         response = self.client.get('/api/create')
@@ -65,9 +70,13 @@ class TestCreateRoutes(unittest.TestCase):
         # Assert
         self.assertEqual(response.status_code, 200)
         data = response.json
-        self.assertIsInstance(data, list)
-        self.assertEqual(len(data), 2)
-        mock_get_creates.assert_called_once_with(self.mock_token, self.mock_breadcrumb)
+        self.assertIsInstance(data, dict)
+        self.assertIn('items', data)
+        self.assertEqual(len(data['items']), 2)
+        mock_get_creates.assert_called_once_with(
+            self.mock_token, self.mock_breadcrumb,
+            name=None, after_id=None, limit=10, sort_by='name', order='asc'
+        )
     
     @patch('src.routes.create_routes.create_flask_token')
     @patch('src.routes.create_routes.create_flask_breadcrumb')
