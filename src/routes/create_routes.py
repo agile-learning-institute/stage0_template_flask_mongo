@@ -56,17 +56,50 @@ def create_create_routes():
     @handle_route_exceptions
     def get_creates():
         """
-        GET /api/create - Retrieve all create documents.
+        GET /api/create - Retrieve infinite scroll batch of sorted, filtered create documents.
+        
+        Query Parameters:
+            name: Optional name filter
+            after_id: Cursor for infinite scroll (ID of last item from previous batch, omit for first request)
+            limit: Items per batch (default: 10, max: 100)
+            sort_by: Field to sort by (default: 'name')
+            order: Sort order 'asc' or 'desc' (default: 'asc')
         
         Returns:
-            JSON response with list of create documents
+            JSON response with infinite scroll results: {
+                'items': [...],
+                'limit': int,
+                'has_more': bool,
+                'next_cursor': str|None
+            }
+        
+        Raises:
+            400 Bad Request: If invalid parameters provided
         """
         token = create_flask_token()
         breadcrumb = create_flask_breadcrumb(token)
         
-        creates = CreateService.get_creates(token, breadcrumb)
+        # Get query parameters
+        name = request.args.get('name')
+        after_id = request.args.get('after_id')
+        limit = request.args.get('limit', 10, type=int)
+        sort_by = request.args.get('sort_by', 'name')
+        order = request.args.get('order', 'asc')
+        
+        # Service layer validates parameters and raises HTTPBadRequest if invalid
+        # @handle_route_exceptions decorator will catch and format the exception
+        result = CreateService.get_creates(
+            token, 
+            breadcrumb, 
+            name=name,
+            after_id=after_id,
+            limit=limit,
+            sort_by=sort_by,
+            order=order
+        )
+        
         logger.info(f"get_creates Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
-        return jsonify(creates), 200
+        return jsonify(result), 200
     
     @create_routes.route('/<create_id>', methods=['GET'])
     @handle_route_exceptions
