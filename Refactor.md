@@ -488,24 +488,32 @@ GET /api/control  # Returns infinite scroll format (no backward compatibility)
 ### Phase 2: Frontend Integration (SPA)
 1. template_vue_vuetify/Refactor.md
 
-### Phase 3: Extract to api_utils (After Everything Works)
-1. Identify reusable code patterns from Phase 1 implementation
-2. **HTTPBadRequest exception**: Already exists in `api_utils/api_utils/flask_utils/exceptions.py` (added during Phase 1). Phase 3 will update imports in template API from `src.utils.exceptions` to `api_utils.flask_utils.exceptions`
-3. Create `api_utils/api_utils/mongo_utils/infinite_scroll.py` module
-4. Extract `build_infinite_scroll_query()` and `execute_infinite_scroll_query()` functions
-5. Refactor template API to use extracted utilities and `HTTPBadRequest` from api_utils (replace local `src.utils.exceptions` imports)
-6. Remove local `src/utils/exceptions.py` after migration
-7. Update other APIs to use the utilities
-8. Add unit tests for api_utils utilities
-9. Update documentation
+### Phase 3: Extract to api_utils (Updated Plan)
 
-**Note:** Phase 1 uses local implementation (`src/utils/exceptions.py`) for `HTTPBadRequest` to allow testing before harvesting to api_utils. This ensures the implementation is proven before making it a shared dependency.
+**Current state (post–Phase 1 & 2):**
+- **template_flask_mongo**: All three list endpoints use infinite scroll. Services contain duplicated logic (validation, filter building, sort, query execution, response shaping). `HTTPBadRequest` lives in `src.utils.exceptions` (local).
+- **api_utils**: `HTTPBadRequest` already exists in `flask_utils/exceptions.py`. `handle_route_exceptions` does **not** handle `HTTPBadRequest` (only 401/403/404/500); bad-request validation errors would be returned as 500. No infinite-scroll utilities exist yet.
+
+**Phase 3 – Updated steps:**
+
+| Step | Task | Owner / Notes |
+|------|------|----------------|
+| **3.1** | **Route wrapper**: Add `HTTPBadRequest` handling in `api_utils.flask_utils.route_wrapper` so 400 responses are returned correctly. Add a route-wrapper unit test for `HTTPBadRequest`. | api_utils |
+| **3.2** | **Infinite-scroll module**: Create `api_utils.api_utils.mongo_utils.infinite_scroll.py`. Extract a single helper, e.g. `execute_infinite_scroll_query(collection, *, name=None, after_id=None, limit=10, sort_by='name', order='asc', allowed_sort_fields)`. It should: validate params (raise `HTTPBadRequest`), build filter (name regex + cursor), build sort, run `find().sort().limit(limit+1)`, slice and compute `has_more` / `next_cursor`, return `{items, limit, has_more, next_cursor}`. Use `HTTPBadRequest` from `api_utils.flask_utils.exceptions`. | api_utils |
+| **3.3** | **Exports**: Export the new function (and any shared types) from `mongo_utils/__init__.py` and document in api_utils README. | api_utils |
+| **3.4** | **Unit tests**: Add `tests/mongo_utils/test_infinite_scroll.py` for validation, cursor behaviour, name filter, `has_more` / `next_cursor`, and error cases. | api_utils |
+| **3.5** | **Template refactor**: In `template_flask_mongo`, refactor `control_service`, `create_service`, and `consume_service` to call `execute_infinite_scroll_query` with the appropriate `allowed_sort_fields` and collection. Switch all `HTTPBadRequest` imports from `src.utils.exceptions` to `api_utils.flask_utils.exceptions`. | template_flask_mongo |
+| **3.6** | **Remove local exception**: Delete `src.utils.exceptions` and `src.utils` if unused. Update template unit tests to import `HTTPBadRequest` from `api_utils`. | template_flask_mongo |
+| **3.7** | **Verify**: Run template unit tests, E2E tests, and (if applicable) SPA E2E. Run api_utils tests. Confirm 400 for invalid params and infinite-scroll behaviour end-to-end. | — |
+| **3.8** | **Documentation**: Update api_utils README with infinite-scroll usage. Update template README/Refactor notes if needed. | — |
+
+**Reusable pattern (from Phase 1):**  
+Validation → filter (name + optional cursor) → sort → `find().sort().limit(limit+1)` → truncate, set `has_more` / `next_cursor` → return `{items, limit, has_more, next_cursor}`. Only `allowed_sort_fields` and collection name vary per domain.
 
 **Why this order?**
-- Build it concretely first, understand what works
-- Test with real frontend to catch edge cases
-- Then extract proven patterns into reusable utilities
-- Avoids over-engineering the abstraction before we know what's needed
+- Fix route handling for `HTTPBadRequest` first so 400s are correct.
+- Add and test the infinite-scroll helper in api_utils, then refactor the template to use it.
+- Remove local exception code only after migration is complete and verified.
 
 ## Example Implementation
 
@@ -724,16 +732,18 @@ def get_controls():
   - [ ] All edge cases tested
 
 ### Phase 3: Extract to api_utils (After Phases 1 & 2 Complete)
-- [ ] **api_utils updated:**
-  - [ ] `HTTPBadRequest` exception added to `flask_utils/exceptions.py`
-  - [ ] `infinite_scroll.py` module created with reusable functions
-  - [ ] Unit tests for infinite scroll utilities
-  - [ ] Exported from `mongo_utils/__init__.py`
-- [ ] **Template API refactored:**
-  - [ ] Service methods use api_utils utilities
-  - [ ] Service methods use `HTTPBadRequest` from api_utils
-  - [ ] Code is simpler after extraction
-- [ ] **Documentation:**
-  - [ ] api_utils README updated with infinite scroll utilities
-  - [ ] Template API documentation updated
-- [ ] **Code review completed**
+- [x] **api_utils updated:**
+  - [x] `handle_route_exceptions` handles `HTTPBadRequest` (400); route-wrapper test added
+  - [x] `HTTPBadRequest` already in `flask_utils/exceptions.py` (no change)
+  - [x] `mongo_utils/infinite_scroll.py` created with `execute_infinite_scroll_query`
+  - [x] Unit tests for infinite scroll in `tests/mongo_utils/test_infinite_scroll.py`
+  - [x] Exported from `mongo_utils/__init__.py`; api_utils README updated
+- [x] **Template API refactored:**
+  - [x] Services use `execute_infinite_scroll_query` and `HTTPBadRequest` from api_utils
+  - [x] Local `src.utils.exceptions` removed; template tests use api_utils imports
+  - [x] Service code simpler after extraction
+- [x] **Verification:**
+  - [x] Template unit tests pass; route test for 400 Bad Request added
+  - [x] api_utils tests pass; 400 for invalid params verified
+  - [ ] E2E pass (run `pipenv run db` + `pipenv run dev`, then `pipenv run e2e`)
+- [x] **Documentation:** api_utils README and template docs updated; code review done

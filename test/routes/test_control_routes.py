@@ -110,6 +110,19 @@ class TestControlRoutes(unittest.TestCase):
     
     @patch('src.routes.control_routes.create_flask_token')
     @patch('src.routes.control_routes.create_flask_breadcrumb')
+    @patch('src.routes.control_routes.ControlService.get_controls')
+    def test_get_controls_bad_request(self, mock_get_controls, mock_create_breadcrumb, mock_create_token):
+        """Test GET /api/control returns 400 when service raises HTTPBadRequest."""
+        from api_utils.flask_utils.exceptions import HTTPBadRequest
+        mock_create_token.return_value = self.mock_token
+        mock_create_breadcrumb.return_value = self.mock_breadcrumb
+        mock_get_controls.side_effect = HTTPBadRequest("limit must be <= 100")
+        response = self.client.get('/api/control?limit=101')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("limit must be <= 100", response.json["error"])
+    
+    @patch('src.routes.control_routes.create_flask_token')
+    @patch('src.routes.control_routes.create_flask_breadcrumb')
     @patch('src.routes.control_routes.ControlService.get_control')
     def test_get_control_success(self, mock_get_control, mock_create_breadcrumb, mock_create_token):
         """Test GET /api/control/<id> for successful response."""

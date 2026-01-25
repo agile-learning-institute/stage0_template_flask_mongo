@@ -4,10 +4,8 @@ Control service for business logic and RBAC.
 Handles RBAC checks and MongoDB operations for Control domain.
 """
 from api_utils import MongoIO, Config
-from api_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound, HTTPInternalServerError
-from src.utils.exceptions import HTTPBadRequest
-from bson import ObjectId
-from bson.errors import InvalidId
+from api_utils.flask_utils.exceptions import HTTPBadRequest, HTTPForbidden, HTTPNotFound, HTTPInternalServerError
+from api_utils.mongo_utils import execute_infinite_scroll_query
 import logging
 
 logger = logging.getLogger(__name__)
@@ -138,69 +136,23 @@ class ControlService:
         """
         try:
             ControlService._check_permission(token, 'read')
-            
-            # Validate inputs - raise exceptions for invalid values
-            if limit < 1:
-                raise HTTPBadRequest("limit must be >= 1")
-            if limit > 100:
-                raise HTTPBadRequest("limit must be <= 100")
-            if sort_by not in ALLOWED_SORT_FIELDS:
-                raise HTTPBadRequest(f"sort_by must be one of: {', '.join(ALLOWED_SORT_FIELDS)}")
-            if order not in ['asc', 'desc']:
-                raise HTTPBadRequest("order must be 'asc' or 'desc'")
-            
-            # Validate after_id format if provided
-            if after_id:
-                try:
-                    ObjectId(after_id)
-                except (InvalidId, TypeError):
-                    raise HTTPBadRequest("after_id must be a valid MongoDB ObjectId")
-            
-            # Build filter query
-            filter_query = {}
-            
-            # Simple name search (minimal - can be extended later)
-            if name:
-                filter_query['name'] = {'$regex': name, '$options': 'i'}
-            
-            # Add cursor filter if provided (for infinite scroll)
-            if after_id:
-                # For ascending order: get items with _id > after_id
-                # For descending order: get items with _id < after_id
-                if order == 'asc':
-                    filter_query['_id'] = {'$gt': ObjectId(after_id)}
-                else:
-                    filter_query['_id'] = {'$lt': ObjectId(after_id)}
-            
-            # Build sort query - handle nested fields with dot notation
-            sort_direction = 1 if order == 'asc' else -1
-            sort_query = [(sort_by, sort_direction)]
-            
-            # Get collection and execute query
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
             collection = mongo.get_collection(config.CONTROL_COLLECTION_NAME)
-            
-            # Execute query - fetch one extra to check if there are more items
-            cursor = collection.find(filter_query).sort(sort_query).limit(limit + 1)
-            items = list(cursor)
-            
-            # Check if there are more items
-            has_more = len(items) > limit
-            if has_more:
-                items = items[:limit]  # Remove the extra item
-                next_cursor = str(items[-1]['_id'])  # ID of last item
-            else:
-                next_cursor = None
-            
-            logger.info(f"Retrieved {len(items)} controls (has_more={has_more}) for user {token.get('user_id')}")
-            
-            return {
-                'items': items,
-                'limit': limit,
-                'has_more': has_more,
-                'next_cursor': next_cursor
-            }
+            result = execute_infinite_scroll_query(
+                collection,
+                name=name,
+                after_id=after_id,
+                limit=limit,
+                sort_by=sort_by,
+                order=order,
+                allowed_sort_fields=ALLOWED_SORT_FIELDS,
+            )
+            logger.info(
+                f"Retrieved {len(result['items'])} controls (has_more={result['has_more']}) "
+                f"for user {token.get('user_id')}"
+            )
+            return result
         except HTTPBadRequest:
             raise
         except Exception as e:
