@@ -57,23 +57,50 @@ def create_control_routes():
     @handle_route_exceptions
     def get_controls():
         """
-        GET /api/control - Retrieve all control documents.
+        GET /api/control - Retrieve infinite scroll batch of sorted, filtered control documents.
         
         Query Parameters:
-            name: Optional name filter for partial matching (case-insensitive)
+            name: Optional name filter
+            after_id: Cursor for infinite scroll (ID of last item from previous batch, omit for first request)
+            limit: Items per batch (default: 10, max: 100)
+            sort_by: Field to sort by (default: 'name')
+            order: Sort order 'asc' or 'desc' (default: 'asc')
         
         Returns:
-            JSON response with list of control documents
+            JSON response with infinite scroll results: {
+                'items': [...],
+                'limit': int,
+                'has_more': bool,
+                'next_cursor': str|None
+            }
+        
+        Raises:
+            400 Bad Request: If invalid parameters provided
         """
         token = create_flask_token()
         breadcrumb = create_flask_breadcrumb(token)
         
-        # Get optional name query parameter
+        # Get query parameters
         name = request.args.get('name')
+        after_id = request.args.get('after_id')
+        limit = request.args.get('limit', 10, type=int)
+        sort_by = request.args.get('sort_by', 'name')
+        order = request.args.get('order', 'asc')
         
-        controls = ControlService.get_controls(token, breadcrumb, name=name)
+        # Service layer validates parameters and raises HTTPBadRequest if invalid
+        # @handle_route_exceptions decorator will catch and format the exception
+        result = ControlService.get_controls(
+            token, 
+            breadcrumb, 
+            name=name,
+            after_id=after_id,
+            limit=limit,
+            sort_by=sort_by,
+            order=order
+        )
+        
         logger.info(f"get_controls Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
-        return jsonify(controls), 200
+        return jsonify(result), 200
     
     @control_routes.route('/<control_id>', methods=['GET'])
     @handle_route_exceptions

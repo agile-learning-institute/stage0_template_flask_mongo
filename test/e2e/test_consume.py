@@ -36,7 +36,12 @@ def test_get_consumes_endpoint():
     assert response.status_code == 200, f"Expected 200, got {response.status_code}"
     
     response_data = response.json()
-    assert isinstance(response_data, list), "Response should be a list"
+    assert isinstance(response_data, dict), "Response should be a dict (infinite scroll format)"
+    assert "items" in response_data, "Response should have 'items' key"
+    assert "limit" in response_data, "Response should have 'limit' key"
+    assert "has_more" in response_data, "Response should have 'has_more' key"
+    assert "next_cursor" in response_data, "Response should have 'next_cursor' key"
+    assert isinstance(response_data["items"], list), "Items should be a list"
 
 
 @pytest.mark.e2e
@@ -50,7 +55,9 @@ def test_get_consumes_with_name_filter():
     assert response.status_code == 200, f"Expected 200, got {response.status_code}"
     
     response_data = response.json()
-    assert isinstance(response_data, list), "Response should be a list"
+    assert isinstance(response_data, dict), "Response should be a dict (infinite scroll format)"
+    assert "items" in response_data, "Response should have 'items' key"
+    assert isinstance(response_data["items"], list), "Items should be a list"
 
 
 @pytest.mark.e2e

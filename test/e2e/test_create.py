@@ -27,7 +27,7 @@ def get_auth_token():
 
 @pytest.mark.e2e
 def test_create_create_endpoint():
-    """Test POST /api/create endpoint."""
+    """Test POST /api/create endpoint and verify record persists in database."""
     token = get_auth_token()
     assert token is not None, "Failed to get auth token"
     
@@ -38,6 +38,7 @@ def test_create_create_endpoint():
         "status": "active"
     }
     
+    # Create the create document
     response = requests.post(f"{BASE_URL}/api/create", headers=headers, json=data)
     assert response.status_code == 201, f"Expected 201, got {response.status_code}"
     
@@ -45,6 +46,26 @@ def test_create_create_endpoint():
     assert "_id" in response_data, "Response missing '_id' key"
     assert response_data["name"] == "e2e-test-create"
     assert "created" in response_data
+    
+    create_id = response_data["_id"]
+    
+    # Verify the created record can be retrieved by ID
+    get_response = requests.get(f"{BASE_URL}/api/create/{create_id}", headers=headers)
+    assert get_response.status_code == 200, "Created document should be retrievable by ID"
+    retrieved = get_response.json()
+    assert retrieved["_id"] == create_id
+    assert retrieved["name"] == "e2e-test-create"
+    assert retrieved["description"] == "E2E test create document"
+    assert retrieved["status"] == "active"
+    
+    # Verify the created record can be found via name filter (more reliable than checking first page)
+    search_response = requests.get(f"{BASE_URL}/api/create?name=e2e-test-create", headers=headers)
+    assert search_response.status_code == 200
+    search_data = search_response.json()
+    assert isinstance(search_data["items"], list)
+    found_creates = [item for item in search_data["items"] if item["_id"] == create_id]
+    assert len(found_creates) == 1, "Created document should be found via name filter"
+    assert found_creates[0]["name"] == "e2e-test-create"
 
 
 @pytest.mark.e2e
@@ -58,7 +79,12 @@ def test_get_creates_endpoint():
     assert response.status_code == 200, f"Expected 200, got {response.status_code}"
     
     response_data = response.json()
-    assert isinstance(response_data, list), "Response should be a list"
+    assert isinstance(response_data, dict), "Response should be a dict (infinite scroll format)"
+    assert "items" in response_data, "Response should have 'items' key"
+    assert "limit" in response_data, "Response should have 'limit' key"
+    assert "has_more" in response_data, "Response should have 'has_more' key"
+    assert "next_cursor" in response_data, "Response should have 'next_cursor' key"
+    assert isinstance(response_data["items"], list), "Items should be a list"
 
 
 @pytest.mark.e2e

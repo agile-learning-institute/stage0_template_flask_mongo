@@ -61,19 +61,21 @@ pipenv run lint
 
 ## API Endpoints
 
+List endpoints (`GET /api/control`, `GET /api/create`, `GET /api/consume`) use server-side infinite scroll via `api_utils.mongo_utils.execute_infinite_scroll_query`. They support `?name=`, `?after_id=`, `?limit=`, `?sort_by=`, and `?order=` and return `{ items, limit, has_more, next_cursor }`. Invalid params return `400 Bad Request`.
+
 ### Control Domain (Full CRUD)
 - `POST /api/control` - Create a new control document
-- `GET /api/control` - Get all control documents (supports `?name=` query parameter for filtering)
+- `GET /api/control` - List controls (infinite scroll; `?name=`, `?after_id=`, `?limit=`, `?sort_by=`, `?order=`)
 - `GET /api/control/{id}` - Get a specific control document
 - `PATCH /api/control/{id}` - Update a control document
 
 ### Create Domain (Create + Read)
 - `POST /api/create` - Create a new create document
-- `GET /api/create` - Get all create documents
+- `GET /api/create` - List creates (infinite scroll; same query params)
 - `GET /api/create/{id}` - Get a specific create document
 
 ### Consume Domain (Read-only)
-- `GET /api/consume` - Get all consume documents (supports `?name=` query parameter for filtering)
+- `GET /api/consume` - List consumes (infinite scroll; same query params)
 - `GET /api/consume/{id}` - Get a specific consume document
 
 ### Common Endpoints

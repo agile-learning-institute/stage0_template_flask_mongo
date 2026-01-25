@@ -27,7 +27,7 @@ def get_auth_token():
 
 @pytest.mark.e2e
 def test_create_control_endpoint():
-    """Test POST /api/control endpoint."""
+    """Test POST /api/control endpoint and verify record persists in database."""
     token = get_auth_token()
     assert token is not None, "Failed to get auth token"
     
@@ -38,6 +38,7 @@ def test_create_control_endpoint():
         "status": "active"
     }
     
+    # Create the control
     response = requests.post(f"{BASE_URL}/api/control", headers=headers, json=data)
     assert response.status_code == 201, f"Expected 201, got {response.status_code}"
     
@@ -46,6 +47,26 @@ def test_create_control_endpoint():
     assert response_data["name"] == "e2e-test-control"
     assert "created" in response_data
     assert "saved" in response_data
+    
+    control_id = response_data["_id"]
+    
+    # Verify the created record can be retrieved by ID
+    get_response = requests.get(f"{BASE_URL}/api/control/{control_id}", headers=headers)
+    assert get_response.status_code == 200, "Created control should be retrievable by ID"
+    retrieved = get_response.json()
+    assert retrieved["_id"] == control_id
+    assert retrieved["name"] == "e2e-test-control"
+    assert retrieved["description"] == "E2E test control document"
+    assert retrieved["status"] == "active"
+    
+    # Verify the created record can be found via name filter (more reliable than checking first page)
+    search_response = requests.get(f"{BASE_URL}/api/control?name=e2e-test-control", headers=headers)
+    assert search_response.status_code == 200
+    search_data = search_response.json()
+    assert isinstance(search_data["items"], list)
+    found_controls = [item for item in search_data["items"] if item["_id"] == control_id]
+    assert len(found_controls) == 1, "Created control should be found via name filter"
+    assert found_controls[0]["name"] == "e2e-test-control"
 
 
 @pytest.mark.e2e
@@ -59,7 +80,12 @@ def test_get_controls_endpoint():
     assert response.status_code == 200, f"Expected 200, got {response.status_code}"
     
     response_data = response.json()
-    assert isinstance(response_data, list), "Response should be a list"
+    assert isinstance(response_data, dict), "Response should be a dict (infinite scroll format)"
+    assert "items" in response_data, "Response should have 'items' key"
+    assert "limit" in response_data, "Response should have 'limit' key"
+    assert "has_more" in response_data, "Response should have 'has_more' key"
+    assert "next_cursor" in response_data, "Response should have 'next_cursor' key"
+    assert isinstance(response_data["items"], list), "Items should be a list"
 
 
 @pytest.mark.e2e
@@ -73,7 +99,9 @@ def test_get_controls_with_name_filter():
     assert response.status_code == 200, f"Expected 200, got {response.status_code}"
     
     response_data = response.json()
-    assert isinstance(response_data, list), "Response should be a list"
+    assert isinstance(response_data, dict), "Response should be a dict (infinite scroll format)"
+    assert "items" in response_data, "Response should have 'items' key"
+    assert isinstance(response_data["items"], list), "Items should be a list"
 
 
 @pytest.mark.e2e
@@ -101,14 +129,14 @@ def test_get_control_by_id_endpoint():
 
 @pytest.mark.e2e
 def test_update_control_endpoint():
-    """Test PATCH /api/control/<id> endpoint."""
+    """Test PATCH /api/control/<id> endpoint and verify update persists in database."""
     token = get_auth_token()
     assert token is not None, "Failed to get auth token"
     
     headers = {"Authorization": f"Bearer {token}"}
     
     # First create a control
-    data = {"name": "e2e-update-test", "status": "active"}
+    data = {"name": "e2e-update-test", "status": "active", "description": "Original description"}
     create_response = requests.post(f"{BASE_URL}/api/control", headers=headers, json=data)
     assert create_response.status_code == 201
     control_id = create_response.json()["_id"]
@@ -122,6 +150,24 @@ def test_update_control_endpoint():
     assert response_data["status"] == "archived"
     assert response_data["description"] == "Updated description"
     assert "saved" in response_data
+    
+    # Verify the update persists by retrieving the record
+    get_response = requests.get(f"{BASE_URL}/api/control/{control_id}", headers=headers)
+    assert get_response.status_code == 200, "Updated control should be retrievable by ID"
+    retrieved = get_response.json()
+    assert retrieved["_id"] == control_id
+    assert retrieved["status"] == "archived", "Status update should persist"
+    assert retrieved["description"] == "Updated description", "Description update should persist"
+    assert retrieved["name"] == "e2e-update-test", "Name should remain unchanged"
+    
+    # Verify the updated record appears in list endpoint with updated values
+    list_response = requests.get(f"{BASE_URL}/api/control?name=e2e-update-test", headers=headers)
+    assert list_response.status_code == 200
+    list_data = list_response.json()
+    found_controls = [item for item in list_data["items"] if item["_id"] == control_id]
+    assert len(found_controls) == 1, "Updated control should appear in list"
+    assert found_controls[0]["status"] == "archived", "Updated status should appear in list"
+    assert found_controls[0]["description"] == "Updated description", "Updated description should appear in list"
 
 
 @pytest.mark.e2e
@@ -141,3 +187,54 @@ def test_control_endpoints_require_auth():
     # Try without token
     response = requests.get(f"{BASE_URL}/api/control")
     assert response.status_code == 401, f"Expected 401, got {response.status_code}"
+
+
+@pytest.mark.e2e
+def test_control_infinite_scroll_with_created_records():
+    """Test infinite scroll pagination with created records."""
+    token = get_auth_token()
+    assert token is not None, "Failed to get auth token"
+    
+    headers = {"Authorization": f"Bearer {token}"}
+    
+    # Create a unique control for this test
+    import time
+    unique_name = f"e2e-scroll-test-{int(time.time())}"
+    data = {"name": unique_name, "status": "active", "description": "Infinite scroll test"}
+    create_response = requests.post(f"{BASE_URL}/api/control", headers=headers, json=data)
+    assert create_response.status_code == 201
+    control_id = create_response.json()["_id"]
+    
+    # Get first page
+    first_page = requests.get(f"{BASE_URL}/api/control?limit=5", headers=headers)
+    assert first_page.status_code == 200
+    first_data = first_page.json()
+    assert "items" in first_data
+    assert "has_more" in first_data
+    assert "next_cursor" in first_data
+    assert "limit" in first_data
+    assert first_data["limit"] == 5
+    assert isinstance(first_data["items"], list)
+    
+    # If there are more items, test pagination
+    if first_data["has_more"] and first_data["next_cursor"]:
+        # Get second page using cursor
+        second_page = requests.get(
+            f"{BASE_URL}/api/control?limit=5&after_id={first_data['next_cursor']}",
+            headers=headers
+        )
+        assert second_page.status_code == 200
+        second_data = second_page.json()
+        assert isinstance(second_data["items"], list)
+        # Verify we got different items (no overlap with first page)
+        first_ids = {item["_id"] for item in first_data["items"]}
+        second_ids = {item["_id"] for item in second_data["items"]}
+        assert len(first_ids.intersection(second_ids)) == 0, "Pages should not have overlapping items"
+    
+    # Verify our created control can be found via search
+    search_response = requests.get(f"{BASE_URL}/api/control?name={unique_name}", headers=headers)
+    assert search_response.status_code == 200
+    search_data = search_response.json()
+    found = [item for item in search_data["items"] if item["_id"] == control_id]
+    assert len(found) == 1, "Created control should be found via search"
+    assert found[0]["name"] == unique_name

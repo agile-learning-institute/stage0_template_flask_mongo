@@ -3,8 +3,9 @@ Unit tests for Create service.
 """
 import unittest
 from unittest.mock import patch, MagicMock
+from bson import ObjectId
 from src.services.create_service import CreateService
-from api_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound, HTTPInternalServerError
+from api_utils.flask_utils.exceptions import HTTPBadRequest, HTTPForbidden, HTTPNotFound, HTTPInternalServerError
 
 
 class TestCreateService(unittest.TestCase):
@@ -103,26 +104,69 @@ class TestCreateService(unittest.TestCase):
     
     @patch('src.services.create_service.Config.get_instance')
     @patch('src.services.create_service.MongoIO.get_instance')
-    def test_get_creates_success(self, mock_get_mongo, mock_get_config):
-        """Test successful retrieval of all create documents."""
+    def test_get_creates_first_batch(self, mock_get_mongo, mock_get_config):
+        """Test successful retrieval of first batch (no cursor)."""
         # Arrange
         mock_config = MagicMock()
         mock_config.CREATE_COLLECTION_NAME = "Create"
         mock_get_config.return_value = mock_config
         
+        mock_collection = MagicMock()
+        mock_cursor = MagicMock()
+        mock_collection.find.return_value = mock_cursor
+        mock_cursor.sort.return_value = mock_cursor
+        mock_cursor.limit.return_value = mock_cursor
+        mock_cursor.__iter__ = lambda self: iter([
+            {"_id": ObjectId("507f1f77bcf86cd799439011"), "name": "create1"},
+            {"_id": ObjectId("507f1f77bcf86cd799439012"), "name": "create2"}
+        ])
+        
         mock_mongo = MagicMock()
-        mock_mongo.get_documents.return_value = [
-            {"_id": "123", "name": "create1"},
-            {"_id": "456", "name": "create2"}
-        ]
+        mock_mongo.get_collection.return_value = mock_collection
         mock_get_mongo.return_value = mock_mongo
         
         # Act
-        creates = CreateService.get_creates(self.mock_token, self.mock_breadcrumb)
+        result = CreateService.get_creates(self.mock_token, self.mock_breadcrumb, limit=10)
         
         # Assert
-        self.assertEqual(len(creates), 2)
-        mock_mongo.get_documents.assert_called_once_with("Create")
+        self.assertIn('items', result)
+        self.assertIn('limit', result)
+        self.assertIn('has_more', result)
+        self.assertIn('next_cursor', result)
+        self.assertEqual(len(result['items']), 2)
+        self.assertEqual(result['limit'], 10)
+        self.assertFalse(result['has_more'])
+        self.assertIsNone(result['next_cursor'])
+    
+    def test_get_creates_invalid_limit_too_small(self):
+        """Test get_creates raises HTTPBadRequest for limit < 1."""
+        with self.assertRaises(HTTPBadRequest) as context:
+            CreateService.get_creates(self.mock_token, self.mock_breadcrumb, limit=0)
+        self.assertIn("limit must be >= 1", str(context.exception))
+    
+    def test_get_creates_invalid_limit_too_large(self):
+        """Test get_creates raises HTTPBadRequest for limit > 100."""
+        with self.assertRaises(HTTPBadRequest) as context:
+            CreateService.get_creates(self.mock_token, self.mock_breadcrumb, limit=101)
+        self.assertIn("limit must be <= 100", str(context.exception))
+    
+    def test_get_creates_invalid_sort_by(self):
+        """Test get_creates raises HTTPBadRequest for invalid sort_by."""
+        with self.assertRaises(HTTPBadRequest) as context:
+            CreateService.get_creates(self.mock_token, self.mock_breadcrumb, sort_by='invalid_field')
+        self.assertIn("sort_by must be one of", str(context.exception))
+    
+    def test_get_creates_invalid_order(self):
+        """Test get_creates raises HTTPBadRequest for invalid order."""
+        with self.assertRaises(HTTPBadRequest) as context:
+            CreateService.get_creates(self.mock_token, self.mock_breadcrumb, order='invalid')
+        self.assertIn("order must be 'asc' or 'desc'", str(context.exception))
+    
+    def test_get_creates_invalid_after_id(self):
+        """Test get_creates raises HTTPBadRequest for invalid after_id."""
+        with self.assertRaises(HTTPBadRequest) as context:
+            CreateService.get_creates(self.mock_token, self.mock_breadcrumb, after_id='invalid')
+        self.assertIn("after_id must be a valid MongoDB ObjectId", str(context.exception))
     
     @patch('src.services.create_service.Config.get_instance')
     @patch('src.services.create_service.MongoIO.get_instance')
@@ -172,8 +216,11 @@ class TestCreateService(unittest.TestCase):
         mock_config.CREATE_COLLECTION_NAME = "Create"
         mock_get_config.return_value = mock_config
         
+        mock_collection = MagicMock()
+        mock_collection.find.side_effect = Exception("Database error")
+        
         mock_mongo = MagicMock()
-        mock_mongo.get_documents.side_effect = Exception("Database error")
+        mock_mongo.get_collection.return_value = mock_collection
         mock_get_mongo.return_value = mock_mongo
         
         # Act & Assert

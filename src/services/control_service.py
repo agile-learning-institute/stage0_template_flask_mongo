@@ -4,12 +4,14 @@ Control service for business logic and RBAC.
 Handles RBAC checks and MongoDB operations for Control domain.
 """
 from api_utils import MongoIO, Config
-from api_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound, HTTPInternalServerError
-from bson import ObjectId
-from bson.errors import InvalidId
+from api_utils.flask_utils.exceptions import HTTPBadRequest, HTTPForbidden, HTTPNotFound, HTTPInternalServerError
+from api_utils.mongo_utils import execute_infinite_scroll_query
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Allowed sort fields for Control domain
+ALLOWED_SORT_FIELDS = ['name', 'description', 'status', 'created.at_time', 'saved.at_time']
 
 
 class ControlService:
@@ -108,33 +110,51 @@ class ControlService:
             raise HTTPInternalServerError(f"Failed to create control: {error_msg}")
     
     @staticmethod
-    def get_controls(token, breadcrumb, name=None):
+    def get_controls(token, breadcrumb, name=None, after_id=None, limit=10, sort_by='name', order='asc'):
         """
-        Retrieve all control documents, optionally filtered by name.
+        Get infinite scroll batch of sorted, filtered control documents.
         
         Args:
-            token: Token dictionary with user_id and roles
-            breadcrumb: Breadcrumb dictionary for logging
-            name: Optional name filter (supports partial matches)
-            
+            token: Authentication token
+            breadcrumb: Audit breadcrumb
+            name: Optional name filter (simple search)
+            after_id: Cursor (ID of last item from previous batch, None for first request)
+            limit: Items per batch
+            sort_by: Field to sort by
+            order: Sort order ('asc' or 'desc')
+        
         Returns:
-            list: List of control documents matching the criteria
+            dict: {
+                'items': [...],
+                'limit': int,
+                'has_more': bool,
+                'next_cursor': str|None  # ID of last item, or None if no more
+            }
+        
+        Raises:
+            HTTPBadRequest: If invalid parameters provided
         """
         try:
             ControlService._check_permission(token, 'read')
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
-            
-            if name:
-                # Use regex for partial matching (case-insensitive)
-                query = {"name": {"$regex": name, "$options": "i"}}
-                controls = mongo.get_documents(config.CONTROL_COLLECTION_NAME, match=query)
-                logger.info(f"Retrieved {len(controls)} controls matching name '{name}' for user {token.get('user_id')}")
-            else:
-                controls = mongo.get_documents(config.CONTROL_COLLECTION_NAME)
-                logger.info(f"Retrieved {len(controls)} controls for user {token.get('user_id')}")
-            
-            return controls
+            collection = mongo.get_collection(config.CONTROL_COLLECTION_NAME)
+            result = execute_infinite_scroll_query(
+                collection,
+                name=name,
+                after_id=after_id,
+                limit=limit,
+                sort_by=sort_by,
+                order=order,
+                allowed_sort_fields=ALLOWED_SORT_FIELDS,
+            )
+            logger.info(
+                f"Retrieved {len(result['items'])} controls (has_more={result['has_more']}) "
+                f"for user {token.get('user_id')}"
+            )
+            return result
+        except HTTPBadRequest:
+            raise
         except Exception as e:
             logger.error(f"Error retrieving controls: {str(e)}")
             raise HTTPInternalServerError("Failed to retrieve controls")

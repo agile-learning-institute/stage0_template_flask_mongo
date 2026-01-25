@@ -4,12 +4,14 @@ Create service for business logic and RBAC.
 Handles RBAC checks and MongoDB operations for Create domain.
 """
 from api_utils import MongoIO, Config
-from api_utils.flask_utils.exceptions import HTTPForbidden, HTTPNotFound, HTTPInternalServerError
-from bson import ObjectId
-from bson.errors import InvalidId
+from api_utils.flask_utils.exceptions import HTTPBadRequest, HTTPForbidden, HTTPNotFound, HTTPInternalServerError
+from api_utils.mongo_utils import execute_infinite_scroll_query
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Allowed sort fields for Create domain
+ALLOWED_SORT_FIELDS = ['name', 'description', 'created.at_time']
 
 
 class CreateService:
@@ -86,24 +88,51 @@ class CreateService:
             raise HTTPInternalServerError(f"Failed to create create: {error_msg}")
     
     @staticmethod
-    def get_creates(token, breadcrumb):
+    def get_creates(token, breadcrumb, name=None, after_id=None, limit=10, sort_by='name', order='asc'):
         """
-        Retrieve all create documents.
+        Get infinite scroll batch of sorted, filtered create documents.
         
         Args:
-            token: Token dictionary with user_id and roles
-            breadcrumb: Breadcrumb dictionary for logging
-            
+            token: Authentication token
+            breadcrumb: Audit breadcrumb
+            name: Optional name filter (simple search)
+            after_id: Cursor (ID of last item from previous batch, None for first request)
+            limit: Items per batch
+            sort_by: Field to sort by
+            order: Sort order ('asc' or 'desc')
+        
         Returns:
-            list: List of all create documents
+            dict: {
+                'items': [...],
+                'limit': int,
+                'has_more': bool,
+                'next_cursor': str|None  # ID of last item, or None if no more
+            }
+        
+        Raises:
+            HTTPBadRequest: If invalid parameters provided
         """
         try:
             CreateService._check_permission(token, 'read')
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
-            creates = mongo.get_documents(config.CREATE_COLLECTION_NAME)
-            logger.info(f"Retrieved {len(creates)} creates for user {token.get('user_id')}")
-            return creates
+            collection = mongo.get_collection(config.CREATE_COLLECTION_NAME)
+            result = execute_infinite_scroll_query(
+                collection,
+                name=name,
+                after_id=after_id,
+                limit=limit,
+                sort_by=sort_by,
+                order=order,
+                allowed_sort_fields=ALLOWED_SORT_FIELDS,
+            )
+            logger.info(
+                f"Retrieved {len(result['items'])} creates (has_more={result['has_more']}) "
+                f"for user {token.get('user_id')}"
+            )
+            return result
+        except HTTPBadRequest:
+            raise
         except Exception as e:
             logger.error(f"Error retrieving creates: {str(e)}")
             raise HTTPInternalServerError("Failed to retrieve creates")
