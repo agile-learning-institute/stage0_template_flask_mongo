@@ -21,6 +21,7 @@ test:
 		-v "$$HOME/tmp/testRepo:/repo" \
 		-v "$$(pwd)/.stage0_template/specifications:/specifications" \
 		-e LOG_LEVEL="$$LOG_LEVEL" \
+		-e SERVICE_NAME="sample" \
 		ghcr.io/agile-learning-institute/stage0_runbook_merge:latest
 	@echo "Checking output..."; \
 	diff -qr "$$(pwd)/.stage0_template/test_expected/" "$$HOME/tmp/testRepo/" || true

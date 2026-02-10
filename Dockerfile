@@ -40,7 +40,7 @@ RUN pipenv run build
 # Stage 2: Production stage
 FROM python:3.12-slim
 
-LABEL org.opencontainers.image.source="https://github.com/agile-crafts-people/template_flask_mongo"
+LABEL org.opencontainers.image.source="{{org.git_host}}/{{org.git_org}}/{{info.slug}}_{{service.name}}_api:latest"
 
 WORKDIR /opt/api_server
 
@@ -78,7 +78,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # Expose the port the app will run on
-EXPOSE 8184
+EXPOSE {{repo.port}}
 
 # Command to run the application using Gunicorn with exec to forward signals
-CMD exec gunicorn --bind 0.0.0.0:8184 src.server:app
+CMD exec gunicorn --bind 0.0.0.0:{{repo.port}} src.server:app

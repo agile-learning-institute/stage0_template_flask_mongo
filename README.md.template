@@ -1,7 +1,7 @@
 # Sample API
 
 ## Prerequisites
-- Creator Dashboard [Developers Edition](https://github.com/{{org.git_org}}/{{info.slug}}/blob/main/CONTRIBUTING.md)
+- {{info.name}} [Developers Edition](https://github.com/{{org.git_org}}/{{info.slug}}/blob/main/CONTRIBUTING.md)
 - Developer [API Standard Prerequisites](https://github.com/{{org.git_org}}/{{info.slug}}/blob/main/DeveloperEdition/standards/api_standards.md)
 
 ## Developer Commands

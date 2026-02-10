@@ -100,7 +100,7 @@ class {{item}}Service:
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
             {{item | lower}}_id = mongo.create_document(config.CONTROL_COLLECTION_NAME, data)
-            logger.info(f"Created {{item | lower}} {{{item | lower}}_id} for user {token.get('user_id')}")
+            logger.info(f"Created {{item | lower}} { {{item | lower}}_id} for user {token.get('user_id')}")
             return {{item | lower}}_id
         except HTTPForbidden:
             raise
@@ -182,15 +182,15 @@ class {{item}}Service:
             config = Config.get_instance()
             {{item | lower}} = mongo.get_document(config.CONTROL_COLLECTION_NAME, {{item | lower}}_id)
             if {{item | lower}} is None:
-                raise HTTPNotFound(f"{{item}} {{{item | lower}}_id} not found")
+                raise HTTPNotFound(f"{{item}} { {{item | lower}}_id} not found")
             
-            logger.info(f"Retrieved {{item | lower}} {{{item | lower}}_id} for user {token.get('user_id')}")
+            logger.info(f"Retrieved {{item | lower}} { {{item | lower}}_id} for user {token.get('user_id')}")
             return {{item | lower}}
         except HTTPNotFound:
             raise
         except Exception as e:
-            logger.error(f"Error retrieving {{item | lower}} {{{item | lower}}_id}: {str(e)}")
-            raise HTTPInternalServerError(f"Failed to retrieve {{item | lower}} {{{item | lower}}_id}")
+            logger.error(f"Error retrieving {{item | lower}} { {{item | lower}}_id}: {str(e)}")
+            raise HTTPInternalServerError(f"Failed to retrieve {{item | lower}} { {{item | lower}}_id}")
     
     @staticmethod
     def update_{{item | lower}}({{item | lower}}_id, data, token, breadcrumb):
@@ -230,12 +230,12 @@ class {{item}}Service:
             )
             
             if updated is None:
-                raise HTTPNotFound(f"{{item}} {{{item | lower}}_id} not found")
+                raise HTTPNotFound(f"{{item}} { {{item | lower}}_id} not found")
             
-            logger.info(f"Updated {{item | lower}} {{{item | lower}}_id} for user {token.get('user_id')}")
+            logger.info(f"Updated {{item | lower}} { {{item | lower}}_id} for user {token.get('user_id')}")
             return updated
         except (HTTPForbidden, HTTPNotFound):
             raise
         except Exception as e:
-            logger.error(f"Error updating {{item | lower}} {{{item | lower}}_id}: {str(e)}")
-            raise HTTPInternalServerError(f"Failed to update {{item | lower}} {{{item | lower}}_id}")
+            logger.error(f"Error updating {{item | lower}} { {{item | lower}}_id}: {str(e)}")
+            raise HTTPInternalServerError(f"Failed to update {{item | lower}} { {{item | lower}}_id}")

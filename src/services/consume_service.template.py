@@ -122,12 +122,12 @@ class {{item}}Service:
             config = Config.get_instance()
             {{item | lower}} = mongo.get_document(config.CONSUME_COLLECTION_NAME, {{item | lower}}_id)
             if {{item | lower}} is None:
-                raise HTTPNotFound(f"{{item}} {{{item | lower}}_id} not found")
+                raise HTTPNotFound(f"{{item}} { {{item | lower}}_id} not found")
             
-            logger.info(f"Retrieved {{item | lower}} {{{item | lower}}_id} for user {token.get('user_id')}")
+            logger.info(f"Retrieved {{item | lower}} { {{item | lower}}_id} for user {token.get('user_id')}")
             return {{item | lower}}
         except HTTPNotFound:
             raise
         except Exception as e:
-            logger.error(f"Error retrieving {{item | lower}} {{{item | lower}}_id}: {str(e)}")
-            raise HTTPInternalServerError(f"Failed to retrieve {{item | lower}} {{{item | lower}}_id}")
+            logger.error(f"Error retrieving {{item | lower}} { {{item | lower}}_id}: {str(e)}")
+            raise HTTPInternalServerError(f"Failed to retrieve {{item | lower}} { {{item | lower}}_id}")
