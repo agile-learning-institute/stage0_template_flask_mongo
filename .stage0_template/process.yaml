@@ -4,6 +4,7 @@ title: Process file for a MongoDB configurator API template
 version: "1.0"
 
 environment:
+SERVICE_NAME: Service name from architecture.yaml
 
 context:
   - key: info
@@ -18,6 +19,12 @@ context:
   - key: architecture
     type: path
     path: specifications.architecture.architecture
+  - key: service
+    type: selector
+    path: architecture.domains
+    filter:
+      property: name
+      value: "{{ SERVICE_NAME }}"
 
 requires:
   - info.name
