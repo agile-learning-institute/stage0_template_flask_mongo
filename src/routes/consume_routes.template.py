@@ -1,34 +1,34 @@
 """
-Consume routes for Flask API.
+{{item}} routes for Flask API.
 
-Provides endpoints for Consume domain:
-- GET /api/consume - Get all consume documents
-- GET /api/consume/<id> - Get a specific consume document by ID
+Provides endpoints for {{item}} domain:
+- GET /api/{{item | lower}} - Get all {{item | lower}} documents
+- GET /api/{{item | lower}}/<id> - Get a specific {{item | lower}} document by ID
 """
 from flask import Blueprint, jsonify, request
 from api_utils.flask_utils.token import create_flask_token
 from api_utils.flask_utils.breadcrumb import create_flask_breadcrumb
 from api_utils.flask_utils.route_wrapper import handle_route_exceptions
-from src.services.consume_service import ConsumeService
+from src.services.{{item | lower}}_service import {{item}}Service
 
 import logging
 logger = logging.getLogger(__name__)
 
 
-def create_consume_routes():
+def create_{{item | lower}}_routes():
     """
-    Create a Flask Blueprint exposing consume endpoints.
+    Create a Flask Blueprint exposing {{item | lower}} endpoints.
     
     Returns:
-        Blueprint: Flask Blueprint with consume routes
+        Blueprint: Flask Blueprint with {{item | lower}} routes
     """
-    consume_routes = Blueprint('consume_routes', __name__)
+    {{item | lower}}_routes = Blueprint('{{item | lower}}_routes', __name__)
     
-    @consume_routes.route('', methods=['GET'])
+    @{{item | lower}}_routes.route('', methods=['GET'])
     @handle_route_exceptions
-    def get_consumes():
+    def get_{{item | lower}}s():
         """
-        GET /api/consume - Retrieve infinite scroll batch of sorted, filtered consume documents.
+        GET /api/{{item | lower}} - Retrieve infinite scroll batch of sorted, filtered {{item | lower}} documents.
         
         Query Parameters:
             name: Optional name filter
@@ -60,7 +60,7 @@ def create_consume_routes():
         
         # Service layer validates parameters and raises HTTPBadRequest if invalid
         # @handle_route_exceptions decorator will catch and format the exception
-        result = ConsumeService.get_consumes(
+        result = {{item}}Service.get_{{item | lower}}s(
             token, 
             breadcrumb, 
             name=name,
@@ -70,27 +70,27 @@ def create_consume_routes():
             order=order
         )
         
-        logger.info(f"get_consumes Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
+        logger.info(f"get_{{item | lower}}s Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
         return jsonify(result), 200
     
-    @consume_routes.route('/<consume_id>', methods=['GET'])
+    @{{item | lower}}_routes.route('/<{{item | lower}}_id>', methods=['GET'])
     @handle_route_exceptions
-    def get_consume(consume_id):
+    def get_{{item | lower}}({{item | lower}}_id):
         """
-        GET /api/consume/<id> - Retrieve a specific consume document by ID.
+        GET /api/{{item | lower}}/<id> - Retrieve a specific {{item | lower}} document by ID.
         
         Args:
-            consume_id: The consume ID to retrieve
+            {{item | lower}}_id: The {{item | lower}} ID to retrieve
             
         Returns:
-            JSON response with the consume document
+            JSON response with the {{item | lower}} document
         """
         token = create_flask_token()
         breadcrumb = create_flask_breadcrumb(token)
         
-        consume = ConsumeService.get_consume(consume_id, token, breadcrumb)
-        logger.info(f"get_consume Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
-        return jsonify(consume), 200
+        {{item | lower}} = {{item}}Service.get_{{item | lower}}({{item | lower}}_id, token, breadcrumb)
+        logger.info(f"get_{{item | lower}} Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
+        return jsonify({{item | lower}}), 200
     
-    logger.info("Consume Flask Routes Registered")
-    return consume_routes
+    logger.info("{{item}} Flask Routes Registered")
+    return {{item | lower}}_routes

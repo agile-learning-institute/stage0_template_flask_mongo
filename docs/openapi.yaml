@@ -1,9 +1,8 @@
 openapi: 3.0.3
 info:
-  title: Template Flask MongoDB API
+  title: {{info.name}} {{service.name}} API
   description: |
-    A Flask + MongoDB API template that follows patterns established in api_utils.
-    This API implements three domains: Control, Create, and Consume.
+    A Flask + MongoDB API for the {{service.name}} service.
     
     ## Authentication
     All endpoints (except `/dev-login` and `/metrics`) require JWT authentication via the `Authorization` header:
@@ -14,13 +13,13 @@ info:
     For local development, obtain a token from the `/dev-login` endpoint.
   version: 0.1.0
   contact:
-    name: AgileCraftsPeople
-    email: AgileCraftsPeople@gmail.com
+    name: {{org.name}}
+    email: {{org.email}}
   license:
     name: Apache-2.0
 
 servers:
-  - url: http://localhost:8184
+  - url: http://localhost:{{repo.port}}
     description: Local development server
 
 tags:
@@ -30,12 +29,18 @@ tags:
     description: Configuration endpoints
   - name: Metrics
     description: Monitoring endpoints
-  - name: Control
-    description: Control domain operations (create, read, update)
-  - name: Create
-    description: Create domain operations (create, read)
-  - name: Consume
-    description: Consume domain operations (read-only)
+{% for domain in service.data_domains.controls %}
+  - name: {{domain.name}}
+    description: {{domain.name}} operations (create, read, update)
+{% endfor %}
+{% for domain in service.data_domains.creates %}
+  - name: {{domain.name}}
+    description: {{domain.name}} operations (create, read)
+{% endfor %}
+{% for domain in service.data_domains.consumes %}
+  - name: {{domain.name}}
+    description: {{domain.name}} operations (read-only)
+{% endfor %}
 
 paths:
   /dev-login:
@@ -144,13 +149,14 @@ paths:
               schema:
                 type: string
 
-  /api/control:
+{% for domain in service.data_domains.controls %}
+  /api/{{domain.name}}:
     get:
       tags:
-        - Control
+        - {{domain.name}}
       summary: Get all control documents
-      description: Retrieve infinite scroll batch of sorted, filtered control documents
-      operationId: getControls
+      description: Retrieve infinite scroll batch of sorted, filtered {{domain.name}} documents
+      operationId: get{{domain.name}}s
       security:
         - bearerAuth: []
       parameters:
@@ -232,10 +238,10 @@ paths:
           $ref: '#/components/responses/InternalError'
     post:
       tags:
-        - Control
-      summary: Create a new control document
-      description: Create a new control document (requires staff or admin role)
-      operationId: createControl
+        - {{domain.name}}
+      summary: Create a new {{domain.name}} document
+      description: Create a new {{domain.name}} document (requires staff or admin role)
+      operationId: create{{domain.name}}
       security:
         - bearerAuth: []
       requestBody:
@@ -243,10 +249,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ControlInput'
+              $ref: '#/components/schemas/{{domain.name}}Input'
       responses:
         '201':
-          description: Control created successfully
+          description: {{domain.name}} created successfully
           content:
             application/json:
               schema:
@@ -262,24 +268,22 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /api/control/{controlId}:
+  /api/{{domain.name}}/{{domain.name}}Id}:
     get:
       tags:
-        - Control
-      summary: Get control by ID
-      description: Retrieve a specific control document by its ID
-      operationId: getControl
+        - {{domain.name}}
+      summary: Get {{domain.name}} by {{domain.name}}Id
+      description: Retrieve a specific {{domain.name}} document by its {{domain.name}}Id
+      operationId: get{{domain.name}}
       security:
         - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/ObjectId'
       responses:
         '200':
-          description: Successfully retrieved control
+          description: Successfully retrieved {{domain.name}}
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Control'
+                $ref: '#/components/schemas/{{domain.name}}'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -288,10 +292,10 @@ paths:
           $ref: '#/components/responses/InternalError'
     patch:
       tags:
-        - Control
-      summary: Update control document
-      description: Update a control document (requires admin role). Cannot update _id, created, or saved fields.
-      operationId: updateControl
+        - {{domain.name}}
+      summary: Update {{domain.name}} document
+      description: Update a {{domain.name}} document (requires admin role). Cannot update _id, created, or saved fields.
+      operationId: update{{domain.name}}
       security:
         - bearerAuth: []
       parameters:
@@ -301,14 +305,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ControlUpdate'
+              $ref: '#/components/schemas/{{domain.name}}Update'
       responses:
         '200':
-          description: Control updated successfully
+          description: {{domain.name}} updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Control'
+                $ref: '#/components/schemas/{{domain.name}}'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -318,13 +322,14 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /api/create:
+{% for domain in service.data_domains.creates %}
+  /api/{{domain.name}}:
     get:
       tags:
-        - Create
+        - {{domain.name}}
       summary: Get all create documents
-      description: Retrieve infinite scroll batch of sorted, filtered create documents
-      operationId: getCreates
+      description: Retrieve infinite scroll batch of sorted, filtered {{domain.name}} documents
+      operationId: get{{domain.name}}s
       security:
         - bearerAuth: []
       parameters:
@@ -372,7 +377,7 @@ paths:
             example: asc
       responses:
         '200':
-          description: Successfully retrieved creates
+          description: Successfully retrieved {{domain.name}}s
           content:
             application/json:
               schema:
@@ -386,7 +391,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Create'
+                      $ref: '#/components/schemas/{{domain.name}}'
                   limit:
                     type: integer
                     example: 10
@@ -406,10 +411,10 @@ paths:
           $ref: '#/components/responses/InternalError'
     post:
       tags:
-        - Create
-      summary: Create a new create document
-      description: Create a new create document (requires staff or admin role)
-      operationId: createCreate
+        - {{domain.name}}
+      summary: Create a new {{domain.name}} document
+      description: Create a new {{domain.name}} document (requires staff or admin role)
+      operationId: create{{domain.name}}
       security:
         - bearerAuth: []
       requestBody:
@@ -417,10 +422,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateInput'
+              $ref: '#/components/schemas/{{domain.name}}Input'
       responses:
         '201':
-          description: Create document created successfully
+          description: {{domain.name}} created successfully
           content:
             application/json:
               schema:
@@ -436,45 +441,47 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /api/create/{createId}:
+  /api/{{domain.name}}/{{domain.name}}Id}:
     get:
       tags:
-        - Create
-      summary: Get create by ID
-      description: Retrieve a specific create document by its ID
-      operationId: getCreate
+        - {{domain.name}}
+      summary: Get {{domain.name}} by {{domain.name}}Id
+      description: Retrieve a specific {{domain.name}} document by its {{domain.name}}Id
+      operationId: get{{domain.name}}
       security:
         - bearerAuth: []
       parameters:
-        - name: createId
+        - name: {{domain.name}}Id
           in: path
           required: true
-          description: The create ID (MongoDB ObjectId)
+          description: The {{domain.name}} ID (MongoDB ObjectId)
           schema:
             type: string
             pattern: '^[0-9a-fA-F]{24}$'
             example: 507f1f77bcf86cd799439011
       responses:
         '200':
-          description: Successfully retrieved create
+          description: Successfully retrieved {{domain.name}}
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Create'
+                $ref: '#/components/schemas/{{domain.name}}'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
+{% endfor %}
 
-  /api/consume:
+{% for domain in service.data_domains.consumes %}
+  /api/{{domain.name}}:
     get:
       tags:
-        - Consume
-      summary: Get all consume documents
-      description: Retrieve infinite scroll batch of sorted, filtered consume documents (read-only)
-      operationId: getConsumes
+        - {{domain.name}}
+      summary: Get all {{domain.name}} documents
+      description: Retrieve infinite scroll batch of sorted, filtered {{domain.name}} documents (read-only)
+      operationId: get{{domain.name}}s
       security:
         - bearerAuth: []
       parameters:
@@ -484,7 +491,7 @@ paths:
           description: Optional name filter (supports partial matches, case-insensitive)
           schema:
             type: string
-            example: my-consume
+            example: my-{{domain.name}}
         - name: after_id
           in: query
           required: false
@@ -522,7 +529,7 @@ paths:
             example: asc
       responses:
         '200':
-          description: Successfully retrieved consumes
+          description: Successfully retrieved {{domain.name}}s
           content:
             application/json:
               schema:
@@ -536,7 +543,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Consume'
+                      $ref: '#/components/schemas/{{domain.name}}'
                   limit:
                     type: integer
                     example: 10
@@ -554,38 +561,41 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalError'
+{% endfor %}
 
-  /api/consume/{consumeId}:
+{% for domain in service.data_domains.consumes %} 
+  /api/{{domain.name}}/{{domain.name}}Id}:
     get:
       tags:
-        - Consume
-      summary: Get consume by ID
-      description: Retrieve a specific consume document by its ID (read-only)
-      operationId: getConsume
+        - {{domain.name}}
+      summary: Get {{domain.name}} by {{domain.name}}Id
+      description: Retrieve a specific {{domain.name}} document by its {{domain.name}}Id (read-only)
+      operationId: get{{domain.name}}
       security:
         - bearerAuth: []
       parameters:
-        - name: consumeId
+        - name: {{domain.name}}Id
           in: path
           required: true
-          description: The consume ID (MongoDB ObjectId)
+          description: The {{domain.name}} ID (MongoDB ObjectId)
           schema:
             type: string
             pattern: '^[0-9a-fA-F]{24}$'
             example: 507f1f77bcf86cd799439011
       responses:
         '200':
-          description: Successfully retrieved consume
+          description: Successfully retrieved {{domain.name}}
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Consume'
+                $ref: '#/components/schemas/{{domain.name}}'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
+{% endfor %}
 
 components:
   securitySchemes:
@@ -682,9 +692,10 @@ components:
           pattern: '^[^\s]{1,40}$'
           example: corr-abc123
 
-    Control:
+{% for domain in service.data_domains.controls %}
+    {{domain.name}}:
       type: object
-      description: Control domain document
+      description: {{domain.name}} domain document
       additionalProperties: false
       required:
         - _id
@@ -699,17 +710,17 @@ components:
           example: 507f1f77bcf86cd799439011
         name:
           type: string
-          description: Control name
+          description: {{domain.name}} name
           pattern: '^[^\s]{1,40}$'
           example: my-control
         description:
           type: string
-          description: Control description
+          description: {{domain.name}} description
           pattern: '^[^\t\n]{0,255}$'
           example: A sample control document
         status:
           type: string
-          description: Control status
+          description: {{domain.name}} status
           enum:
             - active
             - archived
@@ -719,31 +730,31 @@ components:
         saved:
           $ref: '#/components/schemas/Breadcrumb'
 
-    ControlInput:
+    {{domain.name}}Input:
       type: object
-      description: Input for creating a control document
+      description: Input for creating a {{domain.name}} document
       properties:
         name:
           type: string
-          description: Control name
+          description: {{domain.name}} name
           pattern: '^[^\s]{1,40}$'
           example: my-control
         description:
           type: string
-          description: Control description
+          description: {{domain.name}} description
           pattern: '^[^\t\n]{0,255}$'
           example: A sample control document
         status:
           type: string
-          description: Control status
+          description: {{domain.name}} status
           enum:
             - active
             - archived
           example: active
 
-    ControlUpdate:
+    {{domain.name}}Update:
       type: object
-      description: Fields to update in a control document (cannot include _id, created, saved)
+      description: Fields to update in a {{domain.name}} document (cannot include _id, created, saved)
       properties:
         name:
           type: string
@@ -759,60 +770,53 @@ components:
           enum:
             - active
             - archived
-
-    Create:
+{% endfor %}
+{% for domain in service.data_domains.creates %}
+    {{domain.name}}:
       type: object
-      description: Create domain document
+      description: {{domain.name}} domain document
       additionalProperties: false
       required:
         - _id
         - name
-        - created
-      properties:
-        _id:
-          type: string
-          description: MongoDB document ID
-          pattern: '^[0-9a-fA-F]{24}$'
-          example: 507f1f77bcf86cd799439011
-        name:
-          type: string
-          description: Create name
           pattern: '^[^\s]{1,40}$'
           example: my-create
         description:
           type: string
-          description: Create description
+          description: {{domain.name}} description
           pattern: '^[^\t\n]{0,255}$'
-          example: A sample create document
+          example: A sample {{domain.name}} document
         status:
           type: string
-          description: Create status
+          description: {{domain.name}} status
           example: active
         created:
           $ref: '#/components/schemas/Breadcrumb'
 
-    CreateInput:
+    {{domain.name}}Input:
       type: object
-      description: Input for creating a create document
+      description: Input for creating a {{domain.name}} document
       properties:
         name:
           type: string
-          description: Create name
+          description: {{domain.name}} name
           pattern: '^[^\s]{1,40}$'
           example: my-create
         description:
           type: string
-          description: Create description
+          description: {{domain.name}} description
           pattern: '^[^\t\n]{0,255}$'
-          example: A sample create document
+          example: A sample {{domain.name}} document
         status:
           type: string
-          description: Create status
+          description: {{domain.name}} status
           example: active
 
-    Consume:
+{% endfor %}
+{% for domain in service.data_domains.consumes %}
+    {{domain.name}}:
       type: object
-      description: Consume domain document (read-only)
+      description: {{domain.name}} domain document (read-only)
       additionalProperties: false
       required:
         - _id
@@ -825,18 +829,19 @@ components:
           example: 507f1f77bcf86cd799439011
         name:
           type: string
-          description: Consume name
+          description: {{domain.name}} name
           pattern: '^[^\s]{1,40}$'
-          example: my-consume
+          example: my-{{domain.name}}
         description:
           type: string
-          description: Consume description
+          description: {{domain.name}} description
           pattern: '^[^\t\n]{0,255}$'
-          example: A sample consume document
+          example: A sample {{domain.name}} document
         status:
           type: string
-          description: Consume status
+          description: {{domain.name}} status
           example: active
+{% endfor %}
 
     InfiniteScrollResponse:
       type: object

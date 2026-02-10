@@ -1,7 +1,7 @@
 """
-Consume service for business logic and RBAC.
+{{item}} service for business logic and RBAC.
 
-Handles RBAC checks and MongoDB operations for Consume domain.
+Handles RBAC checks and MongoDB operations for {{item}} domain.
 """
 from api_utils import MongoIO, Config
 from api_utils.flask_utils.exceptions import HTTPBadRequest, HTTPForbidden, HTTPNotFound, HTTPInternalServerError
@@ -10,18 +10,18 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Allowed sort fields for Consume domain
+# Allowed sort fields for {{item}} domain
 ALLOWED_SORT_FIELDS = ['name', 'description']
 
 
-class ConsumeService:
+class {{item}}Service:
     """
-    Service class for Consume domain operations.
+    Service class for {{item}} domain operations.
     
     Handles:
     - RBAC authorization checks (placeholder for future implementation)
     - MongoDB operations via MongoIO singleton
-    - Business logic for Consume domain (read-only)
+    - Business logic for {{item}} domain (read-only)
     """
     
     @staticmethod
@@ -44,15 +44,15 @@ class ConsumeService:
                 # Read requires any authenticated user (no additional check needed)
                 # For stricter requirements, you could require specific roles:
                 # if not any(role in token.get('roles', []) for role in ['staff', 'admin', 'viewer']):
-                #     raise HTTPForbidden("Insufficient permissions to read consume documents")
+                #     raise HTTPForbidden("Insufficient permissions to read {{item | lower}} documents")
                 pass
         """
         pass
     
     @staticmethod
-    def get_consumes(token, breadcrumb, name=None, after_id=None, limit=10, sort_by='name', order='asc'):
+    def get_{{item | lower}}s(token, breadcrumb, name=None, after_id=None, limit=10, sort_by='name', order='asc'):
         """
-        Get infinite scroll batch of sorted, filtered consume documents.
+        Get infinite scroll batch of sorted, filtered {{item | lower}} documents.
         
         Args:
             token: Authentication token
@@ -75,7 +75,7 @@ class ConsumeService:
             HTTPBadRequest: If invalid parameters provided
         """
         try:
-            ConsumeService._check_permission(token, 'read')
+            {{item}}Service._check_permission(token, 'read')
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
             collection = mongo.get_collection(config.CONSUME_COLLECTION_NAME)
@@ -89,45 +89,45 @@ class ConsumeService:
                 allowed_sort_fields=ALLOWED_SORT_FIELDS,
             )
             logger.info(
-                f"Retrieved {len(result['items'])} consumes (has_more={result['has_more']}) "
+                f"Retrieved {len(result['items'])} {{item | lower}}s (has_more={result['has_more']}) "
                 f"for user {token.get('user_id')}"
             )
             return result
         except HTTPBadRequest:
             raise
         except Exception as e:
-            logger.error(f"Error retrieving consumes: {str(e)}")
-            raise HTTPInternalServerError("Failed to retrieve consumes")
+            logger.error(f"Error retrieving {{item | lower}}s: {str(e)}")
+            raise HTTPInternalServerError("Failed to retrieve {{item | lower}}s")
     
     @staticmethod
-    def get_consume(consume_id, token, breadcrumb):
+    def get_{{item | lower}}({{item | lower}}_id, token, breadcrumb):
         """
-        Retrieve a specific consume document by ID.
+        Retrieve a specific {{item | lower}} document by ID.
         
         Args:
-            consume_id: The consume ID to retrieve
+            {{item | lower}}_id: The {{item | lower}} ID to retrieve
             token: Token dictionary with user_id and roles
             breadcrumb: Breadcrumb dictionary for logging
             
         Returns:
-            dict: The consume document
+            dict: The {{item | lower}} document
             
         Raises:
-            HTTPNotFound: If consume is not found
+            HTTPNotFound: If {{item | lower}} is not found
         """
         try:
-            ConsumeService._check_permission(token, 'read')
+            {{item}}Service._check_permission(token, 'read')
             
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
-            consume = mongo.get_document(config.CONSUME_COLLECTION_NAME, consume_id)
-            if consume is None:
-                raise HTTPNotFound(f"Consume {consume_id} not found")
+            {{item | lower}} = mongo.get_document(config.CONSUME_COLLECTION_NAME, {{item | lower}}_id)
+            if {{item | lower}} is None:
+                raise HTTPNotFound(f"{{item}} {{{item | lower}}_id} not found")
             
-            logger.info(f"Retrieved consume {consume_id} for user {token.get('user_id')}")
-            return consume
+            logger.info(f"Retrieved {{item | lower}} {{{item | lower}}_id} for user {token.get('user_id')}")
+            return {{item | lower}}
         except HTTPNotFound:
             raise
         except Exception as e:
-            logger.error(f"Error retrieving consume {consume_id}: {str(e)}")
-            raise HTTPInternalServerError(f"Failed to retrieve consume {consume_id}")
+            logger.error(f"Error retrieving {{item | lower}} {{{item | lower}}_id}: {str(e)}")
+            raise HTTPInternalServerError(f"Failed to retrieve {{item | lower}} {{{item | lower}}_id}")

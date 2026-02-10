@@ -25,16 +25,24 @@ context:
     filter:
       property: name
       value: "{{ SERVICE_NAME }}"
+  - key: repo
+    type: selector
+    path: service
+    filter:
+      property: type
+      value: "api"
 
 requires:
   - info.name
   - info.slug
-  - info.db_name
-  - info.base_port
   - org.name
-  - org.git_org
+  - org.email
   - dictionaries   
   - architecture.domains
+  - service.name
+  - repo.name
+  - repo.port
+  - repo.type
 
 templates:
   - path: "./LICENSE"
@@ -45,12 +53,52 @@ templates:
   - path: "./Makefile"
     output: "/dev/null"
     merge: true
+  - path: "./Pipfile"
+    merge: true
+  - path: "./Dockerfile"
+    merge: true
+  - path: "./.github/workflows/docker-push.yml"
+    merge: true
+  - path: "./docs/openapi.yaml"
+    merge: true
+  - path: "./src/server.py"
+    merge: true
 
-  # # Config Test Data files for each Collection Name
-  # - path: "./tests/test_data/config/STRING.template"
-  #   mergeFor:
-  #     items: dictionaries
-  #     output: "./tests/test_data/config/{{name | upper}}_COLLECTION_NAME"
+  # Routes for each Controls data domain
+  - path: "./src/routes/control_routes.template.py"
+    mergeFor:
+      items: service.data_domains.controls
+      output: "./src/routes/{{item | lower}}_routes.py"
+
+  # Routes for each Creates data domain
+  - path: "./src/routes/create_routes.template.py"
+    mergeFor:
+      items: service.data_domains.creates
+      output: "./src/routes/{{item | lower}}_routes.py"
+
+  # Routes for each Consumes data domain
+  - path: "./src/routes/consume_routes.template.py"
+    mergeFor:
+      items: service.data_domains.consumes
+      output: "./src/routes/{{item | lower}}_routes.py"
+
+  # Services for each Controls data domain
+  - path: "./src/services/control_service.template.py"
+    mergeFor:
+      items: service.data_domains.controls
+      output: "./src/services/{{item | lower}}_service.py"
+
+  # Services for each Creates data domain
+  - path: "./src/services/create_service.template.py"
+    mergeFor:
+      items: service.data_domains.creates
+      output: "./src/services/{{item | lower}}_service.py"
+
+  # Services for each Consumes data domain
+  - path: "./src/services/consume_service.template.py"
+    mergeFor:
+      items: service.data_domains.consumes
+      output: "./src/services/{{item | lower}}_service.py"
 
   # # Config Test Data for Port Numbers
   # - path: "./tests/test_data/config/API_PORT.template"

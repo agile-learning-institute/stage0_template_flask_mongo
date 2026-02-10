@@ -1,36 +1,36 @@
-"""
-Control routes for Flask API.
+f"""
+{{item}} routes for Flask API.
 
 Provides endpoints for Control domain:
-- POST /api/control - Create a new control document
-- GET /api/control - Get all control documents (with optional ?name= query parameter)
-- GET /api/control/<id> - Get a specific control document by ID
-- PATCH /api/control/<id> - Update a control document
+- POST /api/{{item | lower}} - Create a new {{item | lower}} document
+- GET /api/{{item | lower}} - Get all {{item | lower}} documents (with optional ?name= query parameter)
+- GET /api/{{item | lower}}/<id> - Get a specific {{item | lower}} document by ID
+- PATCH /api/{{item | lower}}/<id> - Update a {{item | lower}} document
 """
 from flask import Blueprint, jsonify, request
 from api_utils.flask_utils.token import create_flask_token
 from api_utils.flask_utils.breadcrumb import create_flask_breadcrumb
 from api_utils.flask_utils.route_wrapper import handle_route_exceptions
-from src.services.control_service import ControlService
+from src.services.{{item | lower}}_service import ControlService
 
 import logging
 logger = logging.getLogger(__name__)
 
 
-def create_control_routes():
+def create_{{item | lower}}_routes():
     """
-    Create a Flask Blueprint exposing control endpoints.
+    Create a Flask Blueprint exposing {{item | lower}} endpoints.
     
     Returns:
-        Blueprint: Flask Blueprint with control routes
+        Blueprint: Flask Blueprint with {{item | lower}} routes
     """
-    control_routes = Blueprint('control_routes', __name__)
+    {{item | lower}}_routes = Blueprint('{{item | lower}}_routes', __name__)
     
-    @control_routes.route('', methods=['POST'])
+    @{{item | lower}}_routes.route('', methods=['POST'])
     @handle_route_exceptions
-    def create_control():
+    def create_{{item | lower}}():
         """
-        POST /api/control - Create a new control document.
+        POST /api/{{item | lower}} - Create a new {{item | lower}} document.
         
         Request body (JSON):
         {
@@ -41,23 +41,23 @@ def create_control_routes():
         }
         
         Returns:
-            JSON response with the created control document including _id
+            JSON response with the created {{item | lower}} document including _id
         """
         token = create_flask_token()
         breadcrumb = create_flask_breadcrumb(token)
         
         data = request.get_json() or {}
-        control_id = ControlService.create_control(data, token, breadcrumb)
-        control = ControlService.get_control(control_id, token, breadcrumb)
+        {{item | lower}}_id = ControlService.create_{{item | lower}}(data, token, breadcrumb)
+        {{item | lower}} = ControlService.get_{{item | lower}}({{item | lower}}_id, token, breadcrumb)
         
-        logger.info(f"create_control Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
-        return jsonify(control), 201
+        logger.info(f"create_{{item | lower}} Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
+        return jsonify({{item | lower}}), 201
     
-    @control_routes.route('', methods=['GET'])
+    @{{item | lower}}_routes.route('', methods=['GET'])
     @handle_route_exceptions
-    def get_controls():
+    def get_{{item | lower}}s():
         """
-        GET /api/control - Retrieve infinite scroll batch of sorted, filtered control documents.
+        GET /api/{{item | lower}} - Retrieve infinite scroll batch of sorted, filtered {{item | lower}} documents.
         
         Query Parameters:
             name: Optional name filter
@@ -89,7 +89,7 @@ def create_control_routes():
         
         # Service layer validates parameters and raises HTTPBadRequest if invalid
         # @handle_route_exceptions decorator will catch and format the exception
-        result = ControlService.get_controls(
+        result = ControlService.get_{{item | lower}}s(
             token, 
             breadcrumb, 
             name=name,
@@ -99,36 +99,36 @@ def create_control_routes():
             order=order
         )
         
-        logger.info(f"get_controls Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
+        logger.info(f"get_{{item | lower}}s Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
         return jsonify(result), 200
     
-    @control_routes.route('/<control_id>', methods=['GET'])
+    @{{item | lower}}_routes.route('/<{{item | lower}}_id>', methods=['GET'])
     @handle_route_exceptions
-    def get_control(control_id):
+    def get_{{item | lower}}({{item | lower}}_id):
         """
-        GET /api/control/<id> - Retrieve a specific control document by ID.
+        GET /api/{{item | lower}}/<id> - Retrieve a specific {{item | lower}} document by ID.
         
         Args:
-            control_id: The control ID to retrieve
+            {{item | lower}}_id: The {{item | lower}} ID to retrieve
             
         Returns:
-            JSON response with the control document
+            JSON response with the {{item | lower}} document
         """
         token = create_flask_token()
         breadcrumb = create_flask_breadcrumb(token)
         
-        control = ControlService.get_control(control_id, token, breadcrumb)
-        logger.info(f"get_control Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
-        return jsonify(control), 200
+        {{item | lower}} = ControlService.get_{{item | lower}}({{item | lower}}_id, token, breadcrumb)
+        logger.info(f"get_{{item | lower}} Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
+        return jsonify({{item | lower}}), 200
     
-    @control_routes.route('/<control_id>', methods=['PATCH'])
+    @{{item | lower}}_routes.route('/<{{item | lower}}_id>', methods=['PATCH'])
     @handle_route_exceptions
-    def update_control(control_id):
+    def update_{{item | lower}}({{item | lower}}_id):
         """
-        PATCH /api/control/<id> - Update a control document.
+        PATCH /api/{{item | lower}}/<id> - Update a {{item | lower}} document.
         
         Args:
-            control_id: The control ID to update
+            {{item | lower}}_id: The {{item | lower}} ID to update
             
         Request body (JSON):
         {
@@ -139,16 +139,16 @@ def create_control_routes():
         }
         
         Returns:
-            JSON response with the updated control document
+            JSON response with the updated {{item | lower}} document
         """
         token = create_flask_token()
         breadcrumb = create_flask_breadcrumb(token)
         
         data = request.get_json() or {}
-        control = ControlService.update_control(control_id, data, token, breadcrumb)
+        {{item | lower}} = ControlService.update_{{item | lower}}({{item | lower}}_id, data, token, breadcrumb)
         
-        logger.info(f"update_control Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
-        return jsonify(control), 200
+        logger.info(f"update_{{item | lower}} Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
+        return jsonify({{item | lower}}), 200
     
     logger.info("Control Flask Routes Registered")
-    return control_routes
+    return {{item | lower}}_routes

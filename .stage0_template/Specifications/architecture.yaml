@@ -50,8 +50,8 @@ architecture:
           template: agile-learning-institute/stage0_template_vue_utils
           type: spa
           port: 8388
-    - name: template
-      description: Template Service Domain - use for each User Journey domain.
+    - name: sample
+      description: Sample Service Domain
       data_domains:
         controls:
           - Control 
@@ -60,12 +60,12 @@ architecture:
         consumes:
           - Consume
       repos:
-        - name: template_api
+        - name: sample_api
           description: Flask API Template with MongoDB Database
           template: agile-learning-institute/stage0_template_flask_mongo
           type: api
           port: 8389
-        - name: template_spa
+        - name: sample_spa
           description: Vue Vuetify SPA Template
           template: agile-learning-institute/stage0_template_vue_vuetify
           type: spa

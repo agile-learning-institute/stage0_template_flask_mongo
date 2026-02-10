@@ -1,7 +1,7 @@
 """
-Create service for business logic and RBAC.
+{{item}} service for business logic and RBAC.
 
-Handles RBAC checks and MongoDB operations for Create domain.
+Handles RBAC checks and MongoDB operations for {{item}} domain.
 """
 from api_utils import MongoIO, Config
 from api_utils.flask_utils.exceptions import HTTPBadRequest, HTTPForbidden, HTTPNotFound, HTTPInternalServerError
@@ -10,18 +10,18 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Allowed sort fields for Create domain
-ALLOWED_SORT_FIELDS = ['name', 'description', 'created.at_time']
+# Allowed sort fields for {{item}} domain
+ALLOWED_SORT_FIELDS = ['name', 'description', '{{item | lower}}d.at_time']
 
 
-class CreateService:
+class {{item}}Service:
     """
-    Service class for Create domain operations.
+    Service class for {{item}} domain operations.
     
     Handles:
     - RBAC authorization checks (placeholder for future implementation)
     - MongoDB operations via MongoIO singleton
-    - Business logic for Create domain
+    - Business logic for {{item}} domain
     """
     
     @staticmethod
@@ -31,7 +31,7 @@ class CreateService:
         
         Args:
             token: Token dictionary with user_id and roles
-            operation: The operation being performed (e.g., 'read', 'create')
+            operation: The operation being performed (e.g., 'read', '{{item | lower}}')
         
         Raises:
             HTTPForbidden: If user doesn't have required permission
@@ -40,10 +40,10 @@ class CreateService:
         For now, all operations require a valid token (authentication only).
         
         Example RBAC implementation:
-            if operation == 'create':
-                # Create requires staff or admin role
+            if operation == '{{item | lower}}':
+                # {{item}} requires staff or admin role
                 if not any(role in token.get('roles', []) for role in ['staff', 'admin']):
-                    raise HTTPForbidden("Staff or admin role required to create create documents")
+                    raise HTTPForbidden("Staff or admin role required to {{item | lower}} {{item | lower}} documents")
             elif operation == 'read':
                 # Read requires any authenticated user (no additional check needed)
                 pass
@@ -51,46 +51,46 @@ class CreateService:
         pass
     
     @staticmethod
-    def create_create(data, token, breadcrumb):
+    def {{item | lower}}_{{item | lower}}(data, token, breadcrumb):
         """
-        Create a new create document.
+        {{item}} a new {{item | lower}} document.
         
         Args:
-            data: Dictionary containing create data
+            data: Dictionary containing {{item | lower}} data
             token: Token dictionary with user_id and roles
             breadcrumb: Breadcrumb dictionary for logging (contains at_time, by_user, from_ip, correlation_id)
             
         Returns:
-            str: The ID of the created create document
+            str: The ID of the {{item | lower}}d {{item | lower}} document
         """
         try:
-            CreateService._check_permission(token, 'create')
+            {{item}}Service._check_permission(token, '{{item | lower}}')
             
             # Remove _id if present (MongoDB will generate it)
             if '_id' in data:
                 del data['_id']
             
-            # Automatically populate required field: created
+            # Automatically populate required field: {{item | lower}}d
             # This is system-managed and should not be provided by the client
             # Use breadcrumb directly as it already has the correct structure
-            data['created'] = breadcrumb
+            data['{{item | lower}}d'] = breadcrumb
             
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
-            create_id = mongo.create_document(config.CREATE_COLLECTION_NAME, data)
-            logger.info(f"Created create {create_id} for user {token.get('user_id')}")
-            return create_id
+            {{item | lower}}_id = mongo.{{item | lower}}_document(config.CREATE_COLLECTION_NAME, data)
+            logger.info(f"{{item}}d {{item | lower}} {{{item | lower}}_id} for user {token.get('user_id')}")
+            return {{item | lower}}_id
         except HTTPForbidden:
             raise
         except Exception as e:
             error_msg = str(e)
-            logger.error(f"Error creating create: {error_msg}")
-            raise HTTPInternalServerError(f"Failed to create create: {error_msg}")
+            logger.error(f"Error creating {{item | lower}}: {error_msg}")
+            raise HTTPInternalServerError(f"Failed to {{item | lower}} {{item | lower}}: {error_msg}")
     
     @staticmethod
-    def get_creates(token, breadcrumb, name=None, after_id=None, limit=10, sort_by='name', order='asc'):
+    def get_{{item | lower}}s(token, breadcrumb, name=None, after_id=None, limit=10, sort_by='name', order='asc'):
         """
-        Get infinite scroll batch of sorted, filtered create documents.
+        Get infinite scroll batch of sorted, filtered {{item | lower}} documents.
         
         Args:
             token: Authentication token
@@ -113,7 +113,7 @@ class CreateService:
             HTTPBadRequest: If invalid parameters provided
         """
         try:
-            CreateService._check_permission(token, 'read')
+            {{item}}Service._check_permission(token, 'read')
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
             collection = mongo.get_collection(config.CREATE_COLLECTION_NAME)
@@ -127,45 +127,45 @@ class CreateService:
                 allowed_sort_fields=ALLOWED_SORT_FIELDS,
             )
             logger.info(
-                f"Retrieved {len(result['items'])} creates (has_more={result['has_more']}) "
+                f"Retrieved {len(result['items'])} {{item | lower}}s (has_more={result['has_more']}) "
                 f"for user {token.get('user_id')}"
             )
             return result
         except HTTPBadRequest:
             raise
         except Exception as e:
-            logger.error(f"Error retrieving creates: {str(e)}")
-            raise HTTPInternalServerError("Failed to retrieve creates")
+            logger.error(f"Error retrieving {{item | lower}}s: {str(e)}")
+            raise HTTPInternalServerError("Failed to retrieve {{item | lower}}s")
     
     @staticmethod
-    def get_create(create_id, token, breadcrumb):
+    def get_{{item | lower}}({{item | lower}}_id, token, breadcrumb):
         """
-        Retrieve a specific create document by ID.
+        Retrieve a specific {{item | lower}} document by ID.
         
         Args:
-            create_id: The create ID to retrieve
+            {{item | lower}}_id: The {{item | lower}} ID to retrieve
             token: Token dictionary with user_id and roles
             breadcrumb: Breadcrumb dictionary for logging
             
         Returns:
-            dict: The create document
+            dict: The {{item | lower}} document
             
         Raises:
-            HTTPNotFound: If create is not found
+            HTTPNotFound: If {{item | lower}} is not found
         """
         try:
-            CreateService._check_permission(token, 'read')
+            {{item}}Service._check_permission(token, 'read')
             
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
-            create = mongo.get_document(config.CREATE_COLLECTION_NAME, create_id)
-            if create is None:
-                raise HTTPNotFound(f"Create {create_id} not found")
+            {{item | lower}} = mongo.get_document(config.CREATE_COLLECTION_NAME, {{item | lower}}_id)
+            if {{item | lower}} is None:
+                raise HTTPNotFound(f"{{item}} {{{item | lower}}_id} not found")
             
-            logger.info(f"Retrieved create {create_id} for user {token.get('user_id')}")
-            return create
+            logger.info(f"Retrieved {{item | lower}} {{{item | lower}}_id} for user {token.get('user_id')}")
+            return {{item | lower}}
         except HTTPNotFound:
             raise
         except Exception as e:
-            logger.error(f"Error retrieving create {create_id}: {str(e)}")
-            raise HTTPInternalServerError(f"Failed to retrieve create {create_id}")
+            logger.error(f"Error retrieving {{item | lower}} {{{item | lower}}_id}: {str(e)}")
+            raise HTTPInternalServerError(f"Failed to retrieve {{item | lower}} {{{item | lower}}_id}")

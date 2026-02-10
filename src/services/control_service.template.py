@@ -1,7 +1,7 @@
 """
-Control service for business logic and RBAC.
+{{item}} service for business logic and RBAC.
 
-Handles RBAC checks and MongoDB operations for Control domain.
+Handles RBAC checks and MongoDB operations for {{item}} domain.
 """
 from api_utils import MongoIO, Config
 from api_utils.flask_utils.exceptions import HTTPBadRequest, HTTPForbidden, HTTPNotFound, HTTPInternalServerError
@@ -10,18 +10,18 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Allowed sort fields for Control domain
+# Allowed sort fields for {{item}} domain
 ALLOWED_SORT_FIELDS = ['name', 'description', 'status', 'created.at_time', 'saved.at_time']
 
 
-class ControlService:
+class {{item}}Service:
     """
-    Service class for Control domain operations.
+    Service class for {{item}} domain operations.
     
     Handles:
     - RBAC authorization checks (placeholder for future implementation)
     - MongoDB operations via MongoIO singleton
-    - Business logic for Control domain
+    - Business logic for {{item}} domain
     """
     
     @staticmethod
@@ -43,11 +43,11 @@ class ControlService:
             if operation == 'update':
                 # Update requires admin role
                 if 'admin' not in token.get('roles', []):
-                    raise HTTPForbidden("Admin role required to update control documents")
+                    raise HTTPForbidden("Admin role required to update {{item | lower}} documents")
             elif operation == 'create':
                 # Create requires staff or admin role
                 if not any(role in token.get('roles', []) for role in ['staff', 'admin']):
-                    raise HTTPForbidden("Staff or admin role required to create control documents")
+                    raise HTTPForbidden("Staff or admin role required to create {{item | lower}} documents")
             elif operation == 'read':
                 # Read requires any authenticated user (no additional check needed)
                 pass
@@ -72,20 +72,20 @@ class ControlService:
                 raise HTTPForbidden(f"Cannot update {field} field")
     
     @staticmethod
-    def create_control(data, token, breadcrumb):
+    def create_{{item | lower}}(data, token, breadcrumb):
         """
-        Create a new control document.
+        Create a new {{item | lower}} document.
         
         Args:
-            data: Dictionary containing control data
+            data: Dictionary containing {{item | lower}} data
             token: Token dictionary with user_id and roles
             breadcrumb: Breadcrumb dictionary for logging (contains at_time, by_user, from_ip, correlation_id)
             
         Returns:
-            str: The ID of the created control document
+            str: The ID of the created {{item | lower}} document
         """
         try:
-            ControlService._check_permission(token, 'create')
+            {{item}}Service._check_permission(token, 'create')
             
             # Remove _id if present (MongoDB will generate it)
             if '_id' in data:
@@ -99,20 +99,20 @@ class ControlService:
             
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
-            control_id = mongo.create_document(config.CONTROL_COLLECTION_NAME, data)
-            logger.info(f"Created control {control_id} for user {token.get('user_id')}")
-            return control_id
+            {{item | lower}}_id = mongo.create_document(config.CONTROL_COLLECTION_NAME, data)
+            logger.info(f"Created {{item | lower}} {{{item | lower}}_id} for user {token.get('user_id')}")
+            return {{item | lower}}_id
         except HTTPForbidden:
             raise
         except Exception as e:
             error_msg = str(e)
-            logger.error(f"Error creating control: {error_msg}")
-            raise HTTPInternalServerError(f"Failed to create control: {error_msg}")
+            logger.error(f"Error creating {{item | lower}}: {error_msg}")
+            raise HTTPInternalServerError(f"Failed to create {{item | lower}}: {error_msg}")
     
     @staticmethod
-    def get_controls(token, breadcrumb, name=None, after_id=None, limit=10, sort_by='name', order='asc'):
+    def get_{{item | lower}}s(token, breadcrumb, name=None, after_id=None, limit=10, sort_by='name', order='asc'):
         """
-        Get infinite scroll batch of sorted, filtered control documents.
+        Get infinite scroll batch of sorted, filtered {{item | lower}} documents.
         
         Args:
             token: Authentication token
@@ -135,7 +135,7 @@ class ControlService:
             HTTPBadRequest: If invalid parameters provided
         """
         try:
-            ControlService._check_permission(token, 'read')
+            {{item}}Service._check_permission(token, 'read')
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
             collection = mongo.get_collection(config.CONTROL_COLLECTION_NAME)
@@ -149,69 +149,69 @@ class ControlService:
                 allowed_sort_fields=ALLOWED_SORT_FIELDS,
             )
             logger.info(
-                f"Retrieved {len(result['items'])} controls (has_more={result['has_more']}) "
+                f"Retrieved {len(result['items'])} {{item | lower}}s (has_more={result['has_more']}) "
                 f"for user {token.get('user_id')}"
             )
             return result
         except HTTPBadRequest:
             raise
         except Exception as e:
-            logger.error(f"Error retrieving controls: {str(e)}")
-            raise HTTPInternalServerError("Failed to retrieve controls")
+            logger.error(f"Error retrieving {{item | lower}}s: {str(e)}")
+            raise HTTPInternalServerError("Failed to retrieve {{item | lower}}s")
     
     @staticmethod
-    def get_control(control_id, token, breadcrumb):
+    def get_{{item | lower}}({{item | lower}}_id, token, breadcrumb):
         """
-        Retrieve a specific control document by ID.
+        Retrieve a specific {{item | lower}} document by ID.
         
         Args:
-            control_id: The control ID to retrieve
+            {{item | lower}}_id: The {{item | lower}} ID to retrieve
             token: Token dictionary with user_id and roles
             breadcrumb: Breadcrumb dictionary for logging
             
         Returns:
-            dict: The control document
+            dict: The {{item | lower}} document
             
         Raises:
-            HTTPNotFound: If control is not found
+            HTTPNotFound: If {{item | lower}} is not found
         """
         try:
-            ControlService._check_permission(token, 'read')
+            {{item}}Service._check_permission(token, 'read')
             
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
-            control = mongo.get_document(config.CONTROL_COLLECTION_NAME, control_id)
-            if control is None:
-                raise HTTPNotFound(f"Control {control_id} not found")
+            {{item | lower}} = mongo.get_document(config.CONTROL_COLLECTION_NAME, {{item | lower}}_id)
+            if {{item | lower}} is None:
+                raise HTTPNotFound(f"{{item}} {{{item | lower}}_id} not found")
             
-            logger.info(f"Retrieved control {control_id} for user {token.get('user_id')}")
-            return control
+            logger.info(f"Retrieved {{item | lower}} {{{item | lower}}_id} for user {token.get('user_id')}")
+            return {{item | lower}}
         except HTTPNotFound:
             raise
         except Exception as e:
-            logger.error(f"Error retrieving control {control_id}: {str(e)}")
-            raise HTTPInternalServerError(f"Failed to retrieve control {control_id}")
+            logger.error(f"Error retrieving {{item | lower}} {{{item | lower}}_id}: {str(e)}")
+            raise HTTPInternalServerError(f"Failed to retrieve {{item | lower}} {{{item | lower}}_id}")
     
     @staticmethod
-    def update_control(control_id, data, token, breadcrumb):
+    def update_{{item | lower}}({{item | lower}}_id, data, token, breadcrumb):
         """
-        Update a control document.
+        Update a {{item | lower}} document.
         
         Args:
-            control_id: The control ID to update
+            {{item | lower}}_id: The {{item | lower}} ID to update
             data: Dictionary containing fields to update
             token: Token dictionary with user_id and roles
             breadcrumb: Breadcrumb dictionary for logging
             
         Returns:
-            dict: The updated control document
+            dict: The updated {{item | lower}} document
             
         Raises:
-            HTTPNotFound: If control is not found
+            HTTPNotFound: If {{item | lower}} is not found
         """
         try:
-            ControlService._check_permission(token, 'update')
-            ControlService._validate_update_data(data)
+            {{item}}Service._check_permission(token, 'update')
+            {{item}}Service._validate_update_data(data)
             
             # Build update data with $set operator (excluding restricted fields)
             restricted_fields = ['_id', 'created', 'saved']
@@ -225,17 +225,17 @@ class ControlService:
             config = Config.get_instance()
             updated = mongo.update_document(
                 config.CONTROL_COLLECTION_NAME,
-                document_id=control_id,
+                document_id={{item | lower}}_id,
                 set_data=set_data
             )
             
             if updated is None:
-                raise HTTPNotFound(f"Control {control_id} not found")
+                raise HTTPNotFound(f"{{item}} {{{item | lower}}_id} not found")
             
-            logger.info(f"Updated control {control_id} for user {token.get('user_id')}")
+            logger.info(f"Updated {{item | lower}} {{{item | lower}}_id} for user {token.get('user_id')}")
             return updated
         except (HTTPForbidden, HTTPNotFound):
             raise
         except Exception as e:
-            logger.error(f"Error updating control {control_id}: {str(e)}")
-            raise HTTPInternalServerError(f"Failed to update control {control_id}")
+            logger.error(f"Error updating {{item | lower}} {{{item | lower}}_id}: {str(e)}")
+            raise HTTPInternalServerError(f"Failed to update {{item | lower}} {{{item | lower}}_id}")
