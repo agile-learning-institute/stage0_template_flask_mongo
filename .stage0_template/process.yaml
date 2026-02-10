@@ -100,6 +100,58 @@ templates:
       items: service.data_domains.consumes
       output: "./src/services/{{item | lower}}_service.py"
 
+  # Test suite (copied as-is into generated projects)
+  - path: "./test/test_server.py"
+    merge: true
+
+  # Route unit tests for each data domain
+  - path: "./test/routes/test_control_routes.template.py"
+    mergeFor:
+      items: service.data_domains.controls
+      output: "./test/routes/test_{{item | lower}}_routes.py"
+
+  - path: "./test/routes/test_create_routes.template.py"
+    mergeFor:
+      items: service.data_domains.creates
+      output: "./test/routes/test_{{item | lower}}_routes.py"
+
+  - path: "./test/routes/test_consume_routes.template.py"
+    mergeFor:
+      items: service.data_domains.consumes
+      output: "./test/routes/test_{{item | lower}}_routes.py"
+
+  # Service unit tests for each data domain
+  - path: "./test/services/test_control_service.template.py"
+    mergeFor:
+      items: service.data_domains.controls
+      output: "./test/services/test_{{item | lower}}_service.py"
+
+  - path: "./test/services/test_create_service.template.py"
+    mergeFor:
+      items: service.data_domains.creates
+      output: "./test/services/test_{{item | lower}}_service.py"
+
+  - path: "./test/services/test_consume_service.template.py"
+    mergeFor:
+      items: service.data_domains.consumes
+      output: "./test/services/test_{{item | lower}}_service.py"
+
+  # E2E tests for each data domain
+  - path: "./test/e2e/test_control.template.py"
+    mergeFor:
+      items: service.data_domains.controls
+      output: "./test/e2e/test_{{item | lower}}.py"
+
+  - path: "./test/e2e/test_create.template.py"
+    mergeFor:
+      items: service.data_domains.creates
+      output: "./test/e2e/test_{{item | lower}}.py"
+
+  - path: "./test/e2e/test_consume.template.py"
+    mergeFor:
+      items: service.data_domains.consumes
+      output: "./test/e2e/test_{{item | lower}}.py"
+
   # # Config Test Data for Port Numbers
   # - path: "./tests/test_data/config/API_PORT.template"
   #   mergeFor: 

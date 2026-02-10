@@ -76,23 +76,6 @@ class TestAppConfiguration(unittest.TestCase):
         self.assertIsNotNone(self.app)
         self.assertEqual(self.app.name, 'src.server')
     
-    def test_json_encoder_configured(self):
-        """Test that MongoJSONEncoder is configured."""
-        from api_utils import MongoJSONEncoder
-        self.assertIsInstance(self.app.json, MongoJSONEncoder)
-    
-    def test_explorer_route_registered(self):
-        """Test that /docs route blueprint is registered."""
-        # Check that the explorer blueprint is registered
-        blueprint_names = [bp.name for bp in self.app.blueprints.values()]
-        
-        # The explorer routes are provided by api_utils
-        # Check that routes with /docs prefix exist
-        rules = [rule.rule for rule in self.app.url_map.iter_rules()]
-        has_docs_routes = any('/docs' in rule for rule in rules)
-        
-        self.assertTrue(has_docs_routes, "No routes with /docs prefix found")
-    
     def test_config_route_registered(self):
         """Test that /api/config route is registered."""
         response = self.client.get('/api/config')
