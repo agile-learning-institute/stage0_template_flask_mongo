@@ -1,10 +1,10 @@
 # Template Flask MongoDB API
 
-This is a Flask + MongoDB API template that demonstrates the Creator Dashboard architecture patterns with three domain types: Control (full CRUD), Create (create and read), and Consume (read-only). 
+This is a Flask + MongoDB API template that demonstrates the {{info.name}} architecture patterns with three domain types: Control (full CRUD), Create (create and read), and Consume (read-only). 
 
 ## Prerequisites
-- Creator Dashboard [Developers Edition](https://github.com/agile-crafts-people/CreatorDashboard/blob/main/DeveloperEdition/README.md)
-- Developer [API Standard Prerequisites](https://github.com/agile-crafts-people/CreatorDashboard/blob/main/DeveloperEdition/standards/api_standards.md)
+- {{info.name}} [Developers Edition]({{org.git_host.name}}/{{org.git_org.name}}/{{info.slug}}/blob/main/DeveloperEdition/README.md)
+- Developer [API Standard Prerequisites]({{org.git_host.name}}/{{org.git_org.name}}/{{info.slug}}/blob/main/DeveloperEdition/standards/api_standards.md)
 
 ## Developer Commands
 

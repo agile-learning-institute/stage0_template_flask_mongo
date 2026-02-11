@@ -2,10 +2,6 @@
 Flask MongoDB API Template Server
 
 This is a Flask + MongoDB API template that follows patterns established in api_utils.
-It implements three domains following the Creator Dashboard architecture:
-- Control: POST, GET many (with name query), GET one, PATCH one endpoints
-- Create: POST, GET many, GET one endpoints
-- Consume: GET many, GET one endpoints (read-only)
 
 This server demonstrates:
 - Config singleton initialization
