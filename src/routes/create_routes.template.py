@@ -1,4 +1,4 @@
-f"""
+"""
 {{item}} routes for Flask API.
 
 Provides endpoints for Create domain:

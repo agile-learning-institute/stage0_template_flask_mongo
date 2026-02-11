@@ -7,7 +7,7 @@ name = "pypi"
 flask = "*"
 pymongo = "*"
 pyjwt = "*"
-api-utils = {editable = true, git = "{{org.git_host}}/{{org.git_org}}/api_utils.git", ref = "main"}
+api-utils = {editable = true, git = "https://github.com/agile-learning-institute/api_utils.git", ref = "main"}
 
 [dev-packages]
 pytest = "*"
@@ -26,10 +26,10 @@ e2e = "sh -c 'PYTHONPATH=. pytest test/ -m e2e -v'"
 coverage = "sh -c 'PYTHONPATH=. pytest test/ -v -m \"not e2e\" --cov=src --cov-report=term-missing --cov-report=html'"
 lint = "black --check src test"
 format = "black src test"
-container = "sh -c 'docker build --build-arg GITHUB_TOKEN=$(cat ~/.{{info.slug}}/GITHUB_TOKEN) -t {{org.docker_host}}/{{org.docker_org}}/{{info.slug}}_{{service.name}}_api:latest .'"
-db = "sh -c '{{info.developer_cli}} down && {{info.developer_cli}} up mongodb'"
-api = "sh -c '{{info.developer_cli}} down && {{info.developer_cli}} up {{info.slug}}_api'"
-service = "sh -c '{{info.developer_cli}} down && {{info.developer_cli}} up {{info.slug}}'"
+container = "sh -c 'docker build --build-arg GITHUB_TOKEN=$(cat ~/.mentorhub/GITHUB_TOKEN) -t ghcr.io/agile-learning-institute/mentorhub_sample_api:latest .'"
+db = "sh -c 'mh down && mh up mongodb'"
+api = "sh -c 'mh down && mh up mentorhub_sample_api'"
+service = "sh -c 'mh down && mh up mentorhub_sample'"
 
 [requires]
 python_version = "3.12"

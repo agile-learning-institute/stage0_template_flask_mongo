@@ -23,6 +23,9 @@ test:
 		-e LOG_LEVEL="$$LOG_LEVEL" \
 		-e SERVICE_NAME="sample" \
 		ghcr.io/agile-learning-institute/stage0_runbook_merge:latest
+	@echo "Removing __pycache__ from both sides before diff..."; \
+	find "$$HOME/tmp/testRepo" -type d -name __pycache__ -print0 2>/dev/null | xargs -0 rm -rf 2>/dev/null || true; \
+	find "$$(pwd)/.stage0_template/test_expected" -type d -name __pycache__ -print0 2>/dev/null | xargs -0 rm -rf 2>/dev/null || true
 	@echo "Checking output..."; \
 	diff -qr "$$(pwd)/.stage0_template/test_expected/" "$$HOME/tmp/testRepo/" || true
 	@echo "Done."

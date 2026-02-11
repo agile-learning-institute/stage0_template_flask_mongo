@@ -40,7 +40,7 @@ RUN pipenv run build
 # Stage 2: Production stage
 FROM python:3.12-slim
 
-LABEL org.opencontainers.image.source="{{org.git_host}}/{{org.git_org}}/{{info.slug}}_{{service.name}}_api"
+LABEL org.opencontainers.image.source="https://github.com/agile-learning-institute/mentorhub_sample_api"
 
 WORKDIR /opt/api_server
 
@@ -78,7 +78,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # Expose the port the app will run on
-EXPOSE {{repo.port}}
+EXPOSE 8389
 
 # Command to run the application using Gunicorn with exec to forward signals
-CMD exec gunicorn --bind 0.0.0.0:{{repo.port}} src.server:app
+CMD exec gunicorn --bind 0.0.0.0:8389 src.server:app

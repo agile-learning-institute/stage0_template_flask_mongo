@@ -57,7 +57,11 @@ templates:
   - path: "./Makefile"
     output: "/dev/null"
     merge: true
-  - path: "./Pipfile"
+  - path: "./Pipfile.template"
+    output: "./Pipfile"
+    merge: true
+  - path: "./pytest.ini.template"
+    output: "./pytest.ini"
     merge: true
   - path: "./Dockerfile"
     merge: true

@@ -1,8 +1,8 @@
 # Sample API
 
 ## Prerequisites
-- {{info.name}} [Developers Edition]({{org.git_host}}/{{org.git_org}}/{{info.slug}}/blob/main/CONTRIBUTING.md)
-- Developer [API Standard Prerequisites]({{org.git_host}}/{{org.git_org}}/{{info.slug}}/blob/main/DeveloperEdition/standards/api_standards.md)
+- Mentor Hub [Developers Edition](https://github.com/agile-learning-institute/mentorhub/blob/main/CONTRIBUTING.md)
+- Developer [API Standard Prerequisites](https://github.com/agile-learning-institute/mentorhub/blob/main/DeveloperEdition/standards/api_standards.md)
 
 ## Developer Commands
 
