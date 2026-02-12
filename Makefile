@@ -50,6 +50,7 @@ merge:
 		-v "$$(pwd):/repo" \
 		-v "$$CONTEXT_PATH:/specifications" \
 		-e LOG_LEVEL="$$LOG_LEVEL" \
+		-e SERVICE_NAME="$$SERVICE_NAME" \
 		ghcr.io/agile-learning-institute/stage0_runbook_merge:latest
 
 diff:
