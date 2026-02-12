@@ -7,7 +7,7 @@ name = "pypi"
 flask = "*"
 pymongo = "*"
 pyjwt = "*"
-api-utils = {editable = true, git = "{{org.git_host}}/{{org.git_org}}/api_utils.git", ref = "main"}
+api-utils = {editable = true, git = "{{org.git_host}}/{{org.git_org}}/{{info.slug}}_api_utils.git", ref = "main"}
 
 [dev-packages]
 pytest = "*"
