@@ -18,7 +18,7 @@
     "default": {
         "api-utils": {
             "editable": true,
-            "git": "https://github.com/agile-learning-institute/mentorhub_api_utils.git",
+            "git": "{{org.git_host}}/{{org.git_org}}/{{info.slug}}_api_utils.git",
             "markers": "python_version >= '3.6'",
             "ref": "ecbe5a76680da103b667f71926d2ab519505d0d7"
         },
