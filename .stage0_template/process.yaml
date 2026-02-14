@@ -60,8 +60,6 @@ templates:
   - path: "./Pipfile.template"
     output: "./Pipfile"
     merge: true
-  - path: "./Pipfile.lock"
-    merge: true
   - path: "./pytest.ini.template"
     output: "./pytest.ini"
     merge: true
