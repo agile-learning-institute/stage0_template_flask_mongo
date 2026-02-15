@@ -12,7 +12,8 @@ COPY Pipfile Pipfile.lock ./
 
 ARG GITHUB_TOKEN
 RUN git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/" && \
-    pipenv install --deploy --system
+    pipenv install --deploy --system && \
+    pip install --no-cache-dir gunicorn
 
 COPY src/ ./src/
 COPY docs/ ./docs/

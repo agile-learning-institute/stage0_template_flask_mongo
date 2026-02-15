@@ -7,7 +7,7 @@ name = "pypi"
 flask = "*"
 pymongo = "*"
 pyjwt = "*"
-api-utils = {editable = true, git = "https://github.com/agile-learning-institute/mentorhub_api_utils.git", ref = "main"}
+api-utils = {editable = false, git = "https://github.com/agile-learning-institute/mentorhub_api_utils.git", ref = "main"}
 
 [dev-packages]
 pytest = "*"
@@ -30,8 +30,8 @@ container = "sh -c 'DOCKER_BUILDKIT=0 docker build --build-arg GITHUB_TOKEN=$GIT
 push = "sh -c 'docker push ghcr.io/agile-learning-institute/mentorhub_sample_api:latest'"
 build-publish = "sh -c 'pipenv install --dev && pipenv run container && pipenv run push'"
 db = "sh -c 'mh down && mh up mongodb'"
-api = "sh -c 'mh down && mh up mentorhub_sample_api'"
-service = "sh -c 'mh down && mh up mentorhub_sample'"
+api = "sh -c 'mh down && mh up sample_api'"
+service = "sh -c 'mh down && mh up sample'"
 
 [requires]
 python_version = "3.12"
