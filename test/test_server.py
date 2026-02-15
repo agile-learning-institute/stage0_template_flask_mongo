@@ -13,8 +13,8 @@ class TestServerInitialization(unittest.TestCase):
     """Test cases for server initialization."""
     
     @patch('src.server.signal.signal')
-    @patch('src.server.MongoIO.get_instance')
-    @patch('src.server.Config.get_instance')
+    @patch('api_utils.MongoIO.get_instance')
+    @patch('api_utils.Config.get_instance')
     def test_config_singleton_initialized(self, mock_get_config, mock_get_mongo, mock_signal):
         """Test that Config singleton is properly initialized."""
         # Arrange
@@ -37,8 +37,8 @@ class TestServerInitialization(unittest.TestCase):
         mock_get_config.assert_called()
     
     @patch('src.server.signal.signal')
-    @patch('src.server.MongoIO.get_instance')
-    @patch('src.server.Config.get_instance')
+    @patch('api_utils.MongoIO.get_instance')
+    @patch('api_utils.Config.get_instance')
     def test_mongo_singleton_initialized(self, mock_get_config, mock_get_mongo, mock_signal):
         """Test that MongoIO singleton is properly initialized."""
         # Arrange
@@ -140,8 +140,8 @@ class TestSignalHandlers(unittest.TestCase):
     """Test cases for signal handler registration and behavior."""
     
     @patch('src.server.signal.signal')
-    @patch('src.server.MongoIO.get_instance')
-    @patch('src.server.Config.get_instance')
+    @patch('api_utils.MongoIO.get_instance')
+    @patch('api_utils.Config.get_instance')
     def test_sigterm_handler_registered(self, mock_get_config, mock_get_mongo, mock_signal):
         """Test that SIGTERM handler is registered."""
         # Arrange
@@ -168,8 +168,8 @@ class TestSignalHandlers(unittest.TestCase):
         self.assertTrue(sigterm_registered, "SIGTERM handler not registered")
     
     @patch('src.server.signal.signal')
-    @patch('src.server.MongoIO.get_instance')
-    @patch('src.server.Config.get_instance')
+    @patch('api_utils.MongoIO.get_instance')
+    @patch('api_utils.Config.get_instance')
     def test_sigint_handler_registered(self, mock_get_config, mock_get_mongo, mock_signal):
         """Test that SIGINT handler is registered."""
         # Arrange

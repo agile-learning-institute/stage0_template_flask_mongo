@@ -17,10 +17,10 @@ pipenv run db
 ## run unit tests 
 pipenv run test
 
-## run api server in dev mode - captures command line, serves API at localhost:8184
+## run api server in dev mode - captures command line, serves API at localhost:8389
 pipenv run dev
 
-## run E2E tests (assumes running API at localhost:8184)
+## run E2E tests (assumes running API at localhost:8389)
 pipenv run e2e
 
 ## run tests with coverage report
@@ -64,12 +64,12 @@ see the [Open API Specifications](./docs/openapi.yaml) for details on the API
 ### Simple Curl Commands:
 ```bash
 # Get a token
-export TOKEN=$(curl -s -X POST http://localhost:8184/dev-login \
+export TOKEN=$(curl -s -X POST http://localhost:8389/dev-login \
   -H "Content-Type: application/json" \
   -d '{"subject": "user-123", "roles": ["admin"]}' | jq -r '.access_token')
 
 # Get the API Configuration
-curl http://localhost:8184/api/config \
+curl http://localhost:8389/api/config \
   -H "Authorization: Bearer $TOKEN"
 
 ```

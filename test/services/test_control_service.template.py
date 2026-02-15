@@ -116,24 +116,51 @@ class Test{{item}}Service(unittest.TestCase):
         self.assertFalse(result["has_more"])
         self.assertIsNone(result["next_cursor"])
 
-    def test_get_{{item | lower}}s_invalid_limit_too_small(self):
+    @patch("src.services.{{item | lower}}_service.Config.get_instance")
+    @patch("src.services.{{item | lower}}_service.MongoIO.get_instance")
+    def test_get_{{item | lower}}s_invalid_limit_too_small(self, mock_get_mongo, mock_get_config):
         """Test get_{{item | lower}}s raises HTTPBadRequest for limit < 1."""
+        mock_config = MagicMock()
+        mock_config.CONTROL_COLLECTION_NAME = "{{item}}"
+        mock_get_config.return_value = mock_config
+        mock_mongo = MagicMock()
+        mock_mongo.get_collection.return_value = MagicMock()
+        mock_get_mongo.return_value = mock_mongo
+
         with self.assertRaises(HTTPBadRequest) as context:
             {{item}}Service.get_{{item | lower}}s(
                 self.mock_token, self.mock_breadcrumb, limit=0
             )
         self.assertIn("limit must be >= 1", str(context.exception))
 
-    def test_get_{{item | lower}}s_invalid_limit_too_large(self):
+    @patch("src.services.{{item | lower}}_service.Config.get_instance")
+    @patch("src.services.{{item | lower}}_service.MongoIO.get_instance")
+    def test_get_{{item | lower}}s_invalid_limit_too_large(self, mock_get_mongo, mock_get_config):
         """Test get_{{item | lower}}s raises HTTPBadRequest for limit > 100."""
+        mock_config = MagicMock()
+        mock_config.CONTROL_COLLECTION_NAME = "{{item}}"
+        mock_get_config.return_value = mock_config
+        mock_mongo = MagicMock()
+        mock_mongo.get_collection.return_value = MagicMock()
+        mock_get_mongo.return_value = mock_mongo
+
         with self.assertRaises(HTTPBadRequest) as context:
             {{item}}Service.get_{{item | lower}}s(
                 self.mock_token, self.mock_breadcrumb, limit=101
             )
         self.assertIn("limit must be <= 100", str(context.exception))
 
-    def test_get_{{item | lower}}s_invalid_sort_by(self):
+    @patch("src.services.{{item | lower}}_service.Config.get_instance")
+    @patch("src.services.{{item | lower}}_service.MongoIO.get_instance")
+    def test_get_{{item | lower}}s_invalid_sort_by(self, mock_get_mongo, mock_get_config):
         """Test get_{{item | lower}}s raises HTTPBadRequest for invalid sort_by."""
+        mock_config = MagicMock()
+        mock_config.CONTROL_COLLECTION_NAME = "{{item}}"
+        mock_get_config.return_value = mock_config
+        mock_mongo = MagicMock()
+        mock_mongo.get_collection.return_value = MagicMock()
+        mock_get_mongo.return_value = mock_mongo
+
         with self.assertRaises(HTTPBadRequest) as context:
             {{item}}Service.get_{{item | lower}}s(
                 self.mock_token,
@@ -142,8 +169,17 @@ class Test{{item}}Service(unittest.TestCase):
             )
         self.assertIn("sort_by must be one of", str(context.exception))
 
-    def test_get_{{item | lower}}s_invalid_order(self):
+    @patch("src.services.{{item | lower}}_service.Config.get_instance")
+    @patch("src.services.{{item | lower}}_service.MongoIO.get_instance")
+    def test_get_{{item | lower}}s_invalid_order(self, mock_get_mongo, mock_get_config):
         """Test get_{{item | lower}}s raises HTTPBadRequest for invalid order."""
+        mock_config = MagicMock()
+        mock_config.CONTROL_COLLECTION_NAME = "{{item}}"
+        mock_get_config.return_value = mock_config
+        mock_mongo = MagicMock()
+        mock_mongo.get_collection.return_value = MagicMock()
+        mock_get_mongo.return_value = mock_mongo
+
         with self.assertRaises(HTTPBadRequest) as context:
             {{item}}Service.get_{{item | lower}}s(
                 self.mock_token,
@@ -152,8 +188,17 @@ class Test{{item}}Service(unittest.TestCase):
             )
         self.assertIn("order must be 'asc' or 'desc'", str(context.exception))
 
-    def test_get_{{item | lower}}s_invalid_after_id(self):
+    @patch("src.services.{{item | lower}}_service.Config.get_instance")
+    @patch("src.services.{{item | lower}}_service.MongoIO.get_instance")
+    def test_get_{{item | lower}}s_invalid_after_id(self, mock_get_mongo, mock_get_config):
         """Test get_{{item | lower}}s raises HTTPBadRequest for invalid after_id."""
+        mock_config = MagicMock()
+        mock_config.CONTROL_COLLECTION_NAME = "{{item}}"
+        mock_get_config.return_value = mock_config
+        mock_mongo = MagicMock()
+        mock_mongo.get_collection.return_value = MagicMock()
+        mock_get_mongo.return_value = mock_mongo
+
         with self.assertRaises(HTTPBadRequest) as context:
             {{item}}Service.get_{{item | lower}}s(
                 self.mock_token,
@@ -353,7 +398,7 @@ class Test{{item}}Service(unittest.TestCase):
         mock_get_mongo.return_value = mock_mongo
 
         with self.assertRaises(HTTPInternalServerError):
-            {{item}}Service.get_{{item | lower}}(
+            {{item}}Service.get_{{item | lower}}s(
                 self.mock_token, self.mock_breadcrumb
             )
 

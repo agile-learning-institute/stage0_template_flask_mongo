@@ -6,7 +6,7 @@ WORKDIR /app
 RUN apt-get update && \
     apt-get install -y --no-install-recommends git && \
     rm -rf /var/lib/apt/lists/* && \
-    pip install --no-cache-dir pipenv gunicorn gevent
+    pip install --no-cache-dir pipenv
 
 COPY Pipfile Pipfile.lock ./
 
@@ -38,4 +38,4 @@ ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8389
 
-CMD exec gunicorn --bind 0.0.0.0:8389 src.server:app
+CMD exec python -m gunicorn --bind 0.0.0.0:8389 src.server:app

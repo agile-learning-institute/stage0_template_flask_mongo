@@ -2,16 +2,16 @@
 E2E tests for Control endpoints.
 
 These tests verify that Control endpoints work correctly by making
-actual HTTP requests to a running server at localhost:8184.
+actual HTTP requests to a running server at localhost:8389.
 
 To run these tests:
-1. Start the server: pipenv run dev
+1. Start the server: pipenv run dev (or pipenv run api for containerized)
 2. Run E2E tests: pipenv run e2e
 """
 import pytest
 import requests
 
-BASE_URL = "http://localhost:8184"
+BASE_URL = "http://localhost:8389"
 
 
 def get_auth_token():
@@ -35,7 +35,6 @@ def test_create_control_endpoint():
     data = {
         "name": "e2e-test-control",
         "description": "E2E test control document",
-        "status": "active",
     }
 
     response = requests.post(f"{BASE_URL}/api/control", headers=headers, json=data)

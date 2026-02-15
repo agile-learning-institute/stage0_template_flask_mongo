@@ -1,16 +1,7 @@
 """
-Flask MongoDB API Template Server
+Flask MongoDB API Server
 
-This is a Flask + MongoDB API template that follows patterns established in api_utils.
-
-This server demonstrates:
-- Config singleton initialization
-- MongoIO singleton connection
-- Flask route registration
-- Prometheus metrics integration
-- JWT token authentication and authorization
-- Graceful shutdown handling
-- RBAC placeholder pattern for future implementation
+This is a Flask + MongoDB API that for the sample service in the Mentor Hub system.
 """
 import sys
 import os
@@ -24,7 +15,7 @@ config = Config.get_instance()
 # Initialize logging (Config constructor configures logging)
 import logging
 logger = logging.getLogger(__name__)
-logger.info("============= Starting Template Flask MongoDB API Server ===============")
+logger.info("============= Starting Server ===============")
 
 # Initialize MongoIO Singleton and set enumerators and versions
 from api_utils import MongoIO
@@ -91,6 +82,6 @@ signal.signal(signal.SIGINT, handle_exit)
 
 # Expose app for Gunicorn or direct execution
 if __name__ == "__main__":
-    api_port = config.TEMPLATE_API_PORT
+    api_port = config.SAMPLE_API_PORT
     logger.info(f"Starting Flask server on port {api_port}")
     app.run(host="0.0.0.0", port=api_port, debug=False)

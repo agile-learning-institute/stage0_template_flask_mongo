@@ -2,16 +2,16 @@
 E2E tests for {{item}} endpoints (create-style with POST and GET).
 
 These tests verify that {{item}} endpoints work correctly by making
-actual HTTP requests to a running server at localhost:8184.
+actual HTTP requests to a running server at localhost:{{repo.port}}.
 
 To run these tests:
-1. Start the server: pipenv run dev
+1. Start the server: pipenv run dev (or pipenv run api for containerized)
 2. Run E2E tests: pipenv run e2e
 """
 import pytest
 import requests
 
-BASE_URL = "http://localhost:8184"
+BASE_URL = "http://localhost:{{repo.port}}"
 
 
 def get_auth_token():
@@ -35,7 +35,6 @@ def test_create_{{item | lower}}_endpoint():
     data = {
         "name": "e2e-test-{{item | lower}}",
         "description": "E2E test {{item | lower}} document",
-        "status": "active",
     }
 
     response = requests.post(f"{BASE_URL}/api/{{item | lower}}", headers=headers, json=data)
