@@ -35,9 +35,15 @@ from api_utils import (
     create_config_routes,
     create_explorer_routes
 )
-from src.routes.control_routes import create_control_routes
-from src.routes.create_routes import create_create_routes
-from src.routes.consume_routes import create_consume_routes
+{% for item in service.data_domains.controls -%}
+from src.routes.{{item | lower}}_routes import create_{{item | lower}}_routes
+{% endfor -%}
+{% for item in service.data_domains.creates -%}
+from src.routes.{{item | lower}}_routes import create_{{item | lower}}_routes
+{% endfor -%}
+{% for item in service.data_domains.consumes -%}
+from src.routes.{{item | lower}}_routes import create_{{item | lower}}_routes
+{% endfor -%}
 
 # Register route blueprints
 # Register explorer routes with template's docs directory
@@ -94,6 +100,6 @@ signal.signal(signal.SIGINT, handle_exit)
 
 # Expose app for Gunicorn or direct execution
 if __name__ == "__main__":
-    api_port = config.SAMPLE_API_PORT
+    api_port = config.{{ (repo.name | upper | replace("-", "_")) }}_PORT
     logger.info(f"Starting Flask server on port {api_port}")
     app.run(host="0.0.0.0", port=api_port, debug=False)

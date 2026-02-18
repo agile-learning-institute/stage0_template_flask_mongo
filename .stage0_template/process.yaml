@@ -110,7 +110,7 @@ templates:
       items: service.data_domains.consumes
       output: "./src/services/{{item | lower}}_service.py"
 
-  # Test suite (copied as-is into generated projects)
+  # Test suite (template for domain-specific route tests)
   - path: "./test/test_server.py"
     merge: true
 

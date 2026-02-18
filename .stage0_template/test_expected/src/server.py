@@ -38,7 +38,6 @@ from api_utils import (
 from src.routes.control_routes import create_control_routes
 from src.routes.create_routes import create_create_routes
 from src.routes.consume_routes import create_consume_routes
-
 # Register route blueprints
 # Register explorer routes with template's docs directory
 docs_dir = os.path.join(os.path.dirname(__file__), '..', 'docs')

@@ -2,16 +2,25 @@
 E2E tests for {{item}} endpoints.
 
 These tests verify that {{item}} endpoints work correctly by making
-actual HTTP requests to a running server at localhost:{{repo.port}}.
+actual HTTP requests to a running server.
 
 To run these tests:
 1. Start the server: pipenv run dev (or pipenv run api for containerized)
 2. Run E2E tests: pipenv run e2e
+
+Override API base URL with API_URL env var (default: http://localhost:{{repo.port}})
 """
+import os
 import pytest
 import requests
 
-BASE_URL = "http://localhost:{{repo.port}}"
+BASE_URL = os.environ.get("API_URL", "http://localhost:{{repo.port}}")
+
+
+def _err(response, expected):
+    """Format assertion error with response body for debugging."""
+    body = response.text[:300] if response.text else "(empty)"
+    return f"Expected {expected}, got {response.status_code}. Response: {body}"
 
 
 def get_auth_token():
@@ -38,7 +47,7 @@ def test_create_{{item | lower}}_endpoint():
     }
 
     response = requests.post(f"{BASE_URL}/api/{{item | lower}}", headers=headers, json=data)
-    assert response.status_code == 201, f"Expected 201, got {response.status_code}"
+    assert response.status_code == 201, _err(response, 201)
 
     response_data = response.json()
     assert "_id" in response_data, "Response missing '_id' key"
@@ -55,7 +64,7 @@ def test_get_{{item | lower}}s_endpoint():
 
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(f"{BASE_URL}/api/{{item | lower}}", headers=headers)
-    assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+    assert response.status_code == 200, _err(response, 200)
 
     response_data = response.json()
     assert isinstance(response_data, dict), "Response should be a dict (infinite scroll format)"
@@ -74,7 +83,7 @@ def test_get_{{item | lower}}s_with_name_filter():
 
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(f"{BASE_URL}/api/{{item | lower}}?name=e2e", headers=headers)
-    assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+    assert response.status_code == 200, _err(response, 200)
 
     response_data = response.json()
     assert isinstance(response_data, dict), "Response should be a dict (infinite scroll format)"

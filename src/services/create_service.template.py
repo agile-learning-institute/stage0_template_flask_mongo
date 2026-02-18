@@ -11,7 +11,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Allowed sort fields for {{item}} domain
-ALLOWED_SORT_FIELDS = ['name', 'description', '{{item | lower}}d.at_time']
+ALLOWED_SORT_FIELDS = ['name', 'description', 'created.at_time']
 
 
 class {{item}}Service:
@@ -70,10 +70,10 @@ class {{item}}Service:
             if '_id' in data:
                 del data['_id']
             
-            # Automatically populate required field: {{item | lower}}d
+            # Automatically populate required field: created
             # This is system-managed and should not be provided by the client
             # Use breadcrumb directly as it already has the correct structure
-            data['{{item | lower}}d'] = breadcrumb
+            data['created'] = breadcrumb
             
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
