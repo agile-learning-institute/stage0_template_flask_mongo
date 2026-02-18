@@ -31,7 +31,7 @@ class {{item}}Service:
         
         Args:
             token: Token dictionary with user_id and roles
-            operation: The operation being performed (e.g., 'read', '{{item | lower}}')
+            operation: The operation being performed (e.g., 'read', 'create')
         
         Raises:
             HTTPForbidden: If user doesn't have required permission
@@ -40,10 +40,10 @@ class {{item}}Service:
         For now, all operations require a valid token (authentication only).
         
         Example RBAC implementation:
-            if operation == '{{item | lower}}':
+            if operation == 'create':
                 # {{item}} requires staff or admin role
                 if not any(role in token.get('roles', []) for role in ['staff', 'admin']):
-                    raise HTTPForbidden("Staff or admin role required to {{item | lower}} {{item | lower}} documents")
+                    raise HTTPForbidden("Staff or admin role required to create {{item | lower}} documents")
             elif operation == 'read':
                 # Read requires any authenticated user (no additional check needed)
                 pass
@@ -51,9 +51,9 @@ class {{item}}Service:
         pass
     
     @staticmethod
-    def {{item | lower}}_{{item | lower}}(data, token, breadcrumb):
+    def create_{{item | lower}}(data, token, breadcrumb):
         """
-        {{item}} a new {{item | lower}} document.
+        Create a new {{item | lower}} document.
         
         Args:
             data: Dictionary containing {{item | lower}} data
@@ -64,7 +64,7 @@ class {{item}}Service:
             str: The ID of the {{item | lower}}d {{item | lower}} document
         """
         try:
-            {{item}}Service._check_permission(token, '{{item | lower}}')
+            {{item}}Service._check_permission(token, 'create')
             
             # Remove _id if present (MongoDB will generate it)
             if '_id' in data:
@@ -77,15 +77,15 @@ class {{item}}Service:
             
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
-            {{item | lower}}_id = mongo.{{item | lower}}_document(config.CREATE_COLLECTION_NAME, data)
-            logger.info(f"{{item}}d {{item | lower}} { {{item | lower}}_id} for user {token.get('user_id')}")
+            {{item | lower}}_id = mongo.create_document(config.CREATE_COLLECTION_NAME, data)
+            logger.info(f"Created {{item | lower}} { {{item | lower}}_id} for user {token.get('user_id')}")
             return {{item | lower}}_id
         except HTTPForbidden:
             raise
         except Exception as e:
             error_msg = str(e)
             logger.error(f"Error creating {{item | lower}}: {error_msg}")
-            raise HTTPInternalServerError(f"Failed to {{item | lower}} {{item | lower}}: {error_msg}")
+            raise HTTPInternalServerError(f"Failed to create {{item | lower}}: {error_msg}")
     
     @staticmethod
     def get_{{item | lower}}s(token, breadcrumb, name=None, after_id=None, limit=10, sort_by='name', order='asc'):

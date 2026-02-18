@@ -7,16 +7,16 @@ Provides endpoints for Create domain:
 - GET /api/{{item | lower}}/<id> - Get a specific {{item | lower}} document by ID
 """
 from flask import Blueprint, jsonify, request
-from api_utils.flask_utils.token import {{item | lower}}_flask_token
-from api_utils.flask_utils.breadcrumb import {{item | lower}}_flask_breadcrumb
+from api_utils.flask_utils.token import create_flask_token
+from api_utils.flask_utils.breadcrumb import create_flask_breadcrumb
 from api_utils.flask_utils.route_wrapper import handle_route_exceptions
-from src.services.{{item | lower}}_service import CreateService
+from src.services.{{item | lower}}_service import {{item}}Service
 
 import logging
 logger = logging.getLogger(__name__)
 
 
-def {{item | lower}}_{{item | lower}}_routes():
+def create_{{item | lower}}_routes():
     """
     Create a Flask Blueprint exposing {{item | lower}} endpoints.
     
@@ -27,7 +27,7 @@ def {{item | lower}}_{{item | lower}}_routes():
     
     @{{item | lower}}_routes.route('', methods=['POST'])
     @handle_route_exceptions
-    def {{item | lower}}_{{item | lower}}():
+    def create_{{item | lower}}():
         """
         POST /api/{{item | lower}} - Create a new {{item | lower}} document.
         
@@ -42,14 +42,14 @@ def {{item | lower}}_{{item | lower}}_routes():
         Returns:
             JSON response with the {{item | lower}}d {{item | lower}} document including _id
         """
-        token = {{item | lower}}_flask_token()
-        breadcrumb = {{item | lower}}_flask_breadcrumb(token)
+        token = create_flask_token()
+        breadcrumb = create_flask_breadcrumb(token)
         
         data = request.get_json() or {}
-        {{item | lower}}_id = CreateService.{{item | lower}}_{{item | lower}}(data, token, breadcrumb)
-        {{item | lower}} = CreateService.get_{{item | lower}}({{item | lower}}_id, token, breadcrumb)
+        {{item | lower}}_id = {{item}}Service.create_{{item | lower}}(data, token, breadcrumb)
+        {{item | lower}} = {{item}}Service.get_{{item | lower}}({{item | lower}}_id, token, breadcrumb)
         
-        logger.info(f"{{item | lower}}_{{item | lower}} Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
+        logger.info(f"create_{{item | lower}} Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
         return jsonify({{item | lower}}), 201
     
     @{{item | lower}}_routes.route('', methods=['GET'])
@@ -76,8 +76,8 @@ def {{item | lower}}_{{item | lower}}_routes():
         Raises:
             400 Bad Request: If invalid parameters provided
         """
-        token = {{item | lower}}_flask_token()
-        breadcrumb = {{item | lower}}_flask_breadcrumb(token)
+        token = create_flask_token()
+        breadcrumb = create_flask_breadcrumb(token)
         
         # Get query parameters
         name = request.args.get('name')
@@ -88,7 +88,7 @@ def {{item | lower}}_{{item | lower}}_routes():
         
         # Service layer validates parameters and raises HTTPBadRequest if invalid
         # @handle_route_exceptions decorator will catch and format the exception
-        result = CreateService.get_{{item | lower}}s(
+        result = {{item}}Service.get_{{item | lower}}s(
             token, 
             breadcrumb, 
             name=name,
@@ -113,10 +113,10 @@ def {{item | lower}}_{{item | lower}}_routes():
         Returns:
             JSON response with the {{item | lower}} document
         """
-        token = {{item | lower}}_flask_token()
-        breadcrumb = {{item | lower}}_flask_breadcrumb(token)
+        token = create_flask_token()
+        breadcrumb = create_flask_breadcrumb(token)
         
-        {{item | lower}} = CreateService.get_{{item | lower}}({{item | lower}}_id, token, breadcrumb)
+        {{item | lower}} = {{item}}Service.get_{{item | lower}}({{item | lower}}_id, token, breadcrumb)
         logger.info(f"get_{{item | lower}} Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
         return jsonify({{item | lower}}), 200
     
