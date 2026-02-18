@@ -31,7 +31,7 @@ class Test{{item}}Service(unittest.TestCase):
     def test_create_{{item | lower}}_success(self, mock_get_mongo, mock_get_config):
         """Test successful creation of a {{item | lower}} document."""
         mock_config = MagicMock()
-        mock_config.CONTROL_COLLECTION_NAME = "Control"
+        mock_config.CONTROL_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
 
         mock_mongo = MagicMock()
@@ -51,7 +51,7 @@ class Test{{item}}Service(unittest.TestCase):
         self.assertEqual({{item | lower}}_id, "123")
         mock_mongo.create_document.assert_called_once()
         call_args = mock_mongo.create_document.call_args
-        self.assertEqual(call_args[0][0], "Control")
+        self.assertEqual(call_args[0][0], "{{item}}")
         created_data = call_args[0][1]
         self.assertIn("created", created_data)
         self.assertIn("saved", created_data)
@@ -62,7 +62,7 @@ class Test{{item}}Service(unittest.TestCase):
     def test_create_{{item | lower}}_removes_id(self, mock_get_mongo, mock_get_config):
         """Test that _id is removed from data before creation."""
         mock_config = MagicMock()
-        mock_config.CONTROL_COLLECTION_NAME = "Control"
+        mock_config.CONTROL_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
 
         mock_mongo = MagicMock()
@@ -84,7 +84,7 @@ class Test{{item}}Service(unittest.TestCase):
     def test_get_{{item | lower}}s_first_batch(self, mock_get_mongo, mock_get_config):
         """Test successful retrieval of first batch (no cursor)."""
         mock_config = MagicMock()
-        mock_config.CONTROL_COLLECTION_NAME = "Control"
+        mock_config.CONTROL_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
 
         mock_collection = MagicMock()
@@ -212,7 +212,7 @@ class Test{{item}}Service(unittest.TestCase):
     def test_get_{{item | lower}}_success(self, mock_get_mongo, mock_get_config):
         """Test successful retrieval of a specific {{item | lower}} document."""
         mock_config = MagicMock()
-        mock_config.CONTROL_COLLECTION_NAME = "Control"
+        mock_config.CONTROL_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
 
         mock_mongo = MagicMock()
@@ -228,14 +228,14 @@ class Test{{item}}Service(unittest.TestCase):
 
         self.assertIsNotNone(result)
         self.assertEqual(result["_id"], "123")
-        mock_mongo.get_document.assert_called_once_with("Control", "123")
+        mock_mongo.get_document.assert_called_once_with("{{item}}", "123")
 
     @patch("src.services.{{item | lower}}_service.Config.get_instance")
     @patch("src.services.{{item | lower}}_service.MongoIO.get_instance")
     def test_get_{{item | lower}}_not_found(self, mock_get_mongo, mock_get_config):
         """Test get_{{item | lower}} raises HTTPNotFound when document not found."""
         mock_config = MagicMock()
-        mock_config.CONTROL_COLLECTION_NAME = "Control"
+        mock_config.CONTROL_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
 
         mock_mongo = MagicMock()
@@ -253,7 +253,7 @@ class Test{{item}}Service(unittest.TestCase):
     def test_update_{{item | lower}}_success(self, mock_get_mongo, mock_get_config):
         """Test successful update of a {{item | lower}} document."""
         mock_config = MagicMock()
-        mock_config.CONTROL_COLLECTION_NAME = "Control"
+        mock_config.CONTROL_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
 
         mock_mongo = MagicMock()
@@ -285,7 +285,7 @@ class Test{{item}}Service(unittest.TestCase):
     ):
         """Test update_{{item | lower}} raises HTTPForbidden for restricted fields."""
         mock_config = MagicMock()
-        mock_config.CONTROL_COLLECTION_NAME = "Control"
+        mock_config.CONTROL_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
 
         mock_mongo = MagicMock()
@@ -317,7 +317,7 @@ class Test{{item}}Service(unittest.TestCase):
     def test_update_{{item | lower}}_not_found(self, mock_get_mongo, mock_get_config):
         """Test update_{{item | lower}} raises HTTPNotFound when document not found."""
         mock_config = MagicMock()
-        mock_config.CONTROL_COLLECTION_NAME = "Control"
+        mock_config.CONTROL_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
 
         mock_mongo = MagicMock()
@@ -337,7 +337,7 @@ class Test{{item}}Service(unittest.TestCase):
     ):
         """Test update_{{item | lower}} uses breadcrumb directly for saved field."""
         mock_config = MagicMock()
-        mock_config.CONTROL_COLLECTION_NAME = "Control"
+        mock_config.CONTROL_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
 
         mock_mongo = MagicMock()
@@ -368,7 +368,7 @@ class Test{{item}}Service(unittest.TestCase):
     ):
         """Test create_{{item | lower}} handles database exceptions."""
         mock_config = MagicMock()
-        mock_config.CONTROL_COLLECTION_NAME = "Control"
+        mock_config.CONTROL_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
 
         mock_mongo = MagicMock()
@@ -387,7 +387,7 @@ class Test{{item}}Service(unittest.TestCase):
     ):
         """Test get_{{item | lower}}s handles database exceptions."""
         mock_config = MagicMock()
-        mock_config.CONTROL_COLLECTION_NAME = "Control"
+        mock_config.CONTROL_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
 
         mock_collection = MagicMock()
@@ -409,7 +409,7 @@ class Test{{item}}Service(unittest.TestCase):
     ):
         """Test get_{{item | lower}} handles database exceptions."""
         mock_config = MagicMock()
-        mock_config.CONTROL_COLLECTION_NAME = "Control"
+        mock_config.CONTROL_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
 
         mock_mongo = MagicMock()
@@ -428,7 +428,7 @@ class Test{{item}}Service(unittest.TestCase):
     ):
         """Test update_{{item | lower}} handles database exceptions."""
         mock_config = MagicMock()
-        mock_config.CONTROL_COLLECTION_NAME = "Control"
+        mock_config.CONTROL_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
 
         mock_mongo = MagicMock()

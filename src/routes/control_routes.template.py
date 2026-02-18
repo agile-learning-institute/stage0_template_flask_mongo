@@ -1,7 +1,7 @@
 """
 {{item}} routes for Flask API.
 
-Provides endpoints for Control domain:
+Provides endpoints for {{item}} domain:
 - POST /api/{{item | lower}} - Create a new {{item | lower}} document
 - GET /api/{{item | lower}} - Get all {{item | lower}} documents (with optional ?name= query parameter)
 - GET /api/{{item | lower}}/<id> - Get a specific {{item | lower}} document by ID
@@ -11,7 +11,7 @@ from flask import Blueprint, jsonify, request
 from api_utils.flask_utils.token import create_flask_token
 from api_utils.flask_utils.breadcrumb import create_flask_breadcrumb
 from api_utils.flask_utils.route_wrapper import handle_route_exceptions
-from src.services.{{item | lower}}_service import ControlService
+from src.services.{{item | lower}}_service import {{item}}Service
 
 import logging
 logger = logging.getLogger(__name__)
@@ -47,8 +47,8 @@ def create_{{item | lower}}_routes():
         breadcrumb = create_flask_breadcrumb(token)
         
         data = request.get_json() or {}
-        {{item | lower}}_id = ControlService.create_{{item | lower}}(data, token, breadcrumb)
-        {{item | lower}} = ControlService.get_{{item | lower}}({{item | lower}}_id, token, breadcrumb)
+        {{item | lower}}_id = {{item}}Service.create_{{item | lower}}(data, token, breadcrumb)
+        {{item | lower}} = {{item}}Service.get_{{item | lower}}({{item | lower}}_id, token, breadcrumb)
         
         logger.info(f"create_{{item | lower}} Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
         return jsonify({{item | lower}}), 201
@@ -89,7 +89,7 @@ def create_{{item | lower}}_routes():
         
         # Service layer validates parameters and raises HTTPBadRequest if invalid
         # @handle_route_exceptions decorator will catch and format the exception
-        result = ControlService.get_{{item | lower}}s(
+        result = {{item}}Service.get_{{item | lower}}s(
             token, 
             breadcrumb, 
             name=name,
@@ -117,7 +117,7 @@ def create_{{item | lower}}_routes():
         token = create_flask_token()
         breadcrumb = create_flask_breadcrumb(token)
         
-        {{item | lower}} = ControlService.get_{{item | lower}}({{item | lower}}_id, token, breadcrumb)
+        {{item | lower}} = {{item}}Service.get_{{item | lower}}({{item | lower}}_id, token, breadcrumb)
         logger.info(f"get_{{item | lower}} Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
         return jsonify({{item | lower}}), 200
     
@@ -145,10 +145,10 @@ def create_{{item | lower}}_routes():
         breadcrumb = create_flask_breadcrumb(token)
         
         data = request.get_json() or {}
-        {{item | lower}} = ControlService.update_{{item | lower}}({{item | lower}}_id, data, token, breadcrumb)
+        {{item | lower}} = {{item}}Service.update_{{item | lower}}({{item | lower}}_id, data, token, breadcrumb)
         
         logger.info(f"update_{{item | lower}} Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}")
         return jsonify({{item | lower}}), 200
     
-    logger.info("Control Flask Routes Registered")
+    logger.info("{{item}} Flask Routes Registered")
     return {{item | lower}}_routes
