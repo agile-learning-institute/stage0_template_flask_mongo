@@ -2,16 +2,24 @@
 E2E tests for Create endpoints (create-style with POST and GET).
 
 These tests verify that Create endpoints work correctly by making
-actual HTTP requests to a running server at localhost:8389.
+actual HTTP requests to a running server.
 
 To run these tests:
 1. Start the server: pipenv run dev (or pipenv run api for containerized)
 2. Run E2E tests: pipenv run e2e
+
+API runs on port 8389 (same for dev and api).
 """
 import pytest
 import requests
 
 BASE_URL = "http://localhost:8389"
+
+
+def _err(response, expected):
+    """Format assertion error with response body for debugging."""
+    body = response.text[:300] if response.text else "(empty)"
+    return f"Expected {expected}, got {response.status_code}. Response: {body}"
 
 
 def get_auth_token():
@@ -38,7 +46,7 @@ def test_create_create_endpoint():
     }
 
     response = requests.post(f"{BASE_URL}/api/create", headers=headers, json=data)
-    assert response.status_code == 201, f"Expected 201, got {response.status_code}"
+    assert response.status_code == 201, _err(response, 201)
 
     response_data = response.json()
     assert "_id" in response_data, "Response missing '_id' key"
@@ -54,7 +62,7 @@ def test_get_creates_endpoint():
 
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(f"{BASE_URL}/api/create", headers=headers)
-    assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+    assert response.status_code == 200, _err(response, 200)
 
     response_data = response.json()
     assert isinstance(response_data, dict), "Response should be a dict (infinite scroll format)"
@@ -76,7 +84,7 @@ def test_get_create_not_found():
         f"{BASE_URL}/api/create/000000000000000000000000",
         headers=headers,
     )
-    assert response.status_code == 404, f"Expected 404, got {response.status_code}"
+    assert response.status_code == 404, _err(response, 404)
 
 
 @pytest.mark.e2e

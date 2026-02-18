@@ -31,7 +31,7 @@ class Test{{item}}Service(unittest.TestCase):
     def test_create_{{item | lower}}_success(self, mock_get_mongo, mock_get_config):
         """Test successful creation of a {{item | lower}} document."""
         mock_config = MagicMock()
-        mock_config.CREATE_COLLECTION_NAME = "{{item}}"
+        mock_config.{{ (item | upper) }}_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
 
         mock_mongo = MagicMock()
@@ -61,7 +61,7 @@ class Test{{item}}Service(unittest.TestCase):
     def test_create_{{item | lower}}_removes_id(self, mock_get_mongo, mock_get_config):
         """Test that _id is removed from data before creation."""
         mock_config = MagicMock()
-        mock_config.CREATE_COLLECTION_NAME = "{{item}}"
+        mock_config.{{ (item | upper) }}_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
 
         mock_mongo = MagicMock()
@@ -85,7 +85,7 @@ class Test{{item}}Service(unittest.TestCase):
     ):
         """Test create_{{item | lower}} uses breadcrumb directly for created field."""
         mock_config = MagicMock()
-        mock_config.CREATE_COLLECTION_NAME = "{{item}}"
+        mock_config.{{ (item | upper) }}_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
 
         mock_mongo = MagicMock()
@@ -114,7 +114,7 @@ class Test{{item}}Service(unittest.TestCase):
     def test_get_{{item | lower}}s_first_batch(self, mock_get_mongo, mock_get_config):
         """Test successful retrieval of first batch (no cursor)."""
         mock_config = MagicMock()
-        mock_config.CREATE_COLLECTION_NAME = "{{item}}"
+        mock_config.{{ (item | upper) }}_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
 
         mock_collection = MagicMock()
@@ -151,7 +151,7 @@ class Test{{item}}Service(unittest.TestCase):
     def test_get_{{item | lower}}s_invalid_limit_too_small(self, mock_get_mongo, mock_get_config):
         """Test get_{{item | lower}}s raises HTTPBadRequest for limit < 1."""
         mock_config = MagicMock()
-        mock_config.CREATE_COLLECTION_NAME = "{{item}}"
+        mock_config.{{ (item | upper) }}_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
         mock_mongo = MagicMock()
         mock_mongo.get_collection.return_value = MagicMock()
@@ -168,7 +168,7 @@ class Test{{item}}Service(unittest.TestCase):
     def test_get_{{item | lower}}s_invalid_limit_too_large(self, mock_get_mongo, mock_get_config):
         """Test get_{{item | lower}}s raises HTTPBadRequest for limit > 100."""
         mock_config = MagicMock()
-        mock_config.CREATE_COLLECTION_NAME = "{{item}}"
+        mock_config.{{ (item | upper) }}_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
         mock_mongo = MagicMock()
         mock_mongo.get_collection.return_value = MagicMock()
@@ -185,7 +185,7 @@ class Test{{item}}Service(unittest.TestCase):
     def test_get_{{item | lower}}s_invalid_sort_by(self, mock_get_mongo, mock_get_config):
         """Test get_{{item | lower}}s raises HTTPBadRequest for invalid sort_by."""
         mock_config = MagicMock()
-        mock_config.CREATE_COLLECTION_NAME = "{{item}}"
+        mock_config.{{ (item | upper) }}_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
         mock_mongo = MagicMock()
         mock_mongo.get_collection.return_value = MagicMock()
@@ -204,7 +204,7 @@ class Test{{item}}Service(unittest.TestCase):
     def test_get_{{item | lower}}s_invalid_order(self, mock_get_mongo, mock_get_config):
         """Test get_{{item | lower}}s raises HTTPBadRequest for invalid order."""
         mock_config = MagicMock()
-        mock_config.CREATE_COLLECTION_NAME = "{{item}}"
+        mock_config.{{ (item | upper) }}_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
         mock_mongo = MagicMock()
         mock_mongo.get_collection.return_value = MagicMock()
@@ -223,7 +223,7 @@ class Test{{item}}Service(unittest.TestCase):
     def test_get_{{item | lower}}s_invalid_after_id(self, mock_get_mongo, mock_get_config):
         """Test get_{{item | lower}}s raises HTTPBadRequest for invalid after_id."""
         mock_config = MagicMock()
-        mock_config.CREATE_COLLECTION_NAME = "{{item}}"
+        mock_config.{{ (item | upper) }}_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
         mock_mongo = MagicMock()
         mock_mongo.get_collection.return_value = MagicMock()
@@ -242,7 +242,7 @@ class Test{{item}}Service(unittest.TestCase):
     def test_get_{{item | lower}}_success(self, mock_get_mongo, mock_get_config):
         """Test successful retrieval of a specific {{item | lower}} document."""
         mock_config = MagicMock()
-        mock_config.CREATE_COLLECTION_NAME = "{{item}}"
+        mock_config.{{ (item | upper) }}_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
 
         mock_mongo = MagicMock()
@@ -265,7 +265,7 @@ class Test{{item}}Service(unittest.TestCase):
     def test_get_{{item | lower}}_not_found(self, mock_get_mongo, mock_get_config):
         """Test get_{{item | lower}} raises HTTPNotFound when document not found."""
         mock_config = MagicMock()
-        mock_config.CREATE_COLLECTION_NAME = "{{item}}"
+        mock_config.{{ (item | upper) }}_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
 
         mock_mongo = MagicMock()
@@ -285,7 +285,7 @@ class Test{{item}}Service(unittest.TestCase):
     ):
         """Test get_{{item | lower}}s handles exceptions properly."""
         mock_config = MagicMock()
-        mock_config.CREATE_COLLECTION_NAME = "{{item}}"
+        mock_config.{{ (item | upper) }}_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
 
         mock_collection = MagicMock()
@@ -307,7 +307,7 @@ class Test{{item}}Service(unittest.TestCase):
     ):
         """Test create_{{item | lower}} handles database exceptions."""
         mock_config = MagicMock()
-        mock_config.CREATE_COLLECTION_NAME = "{{item}}"
+        mock_config.{{ (item | upper) }}_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
 
         mock_mongo = MagicMock()
@@ -326,7 +326,7 @@ class Test{{item}}Service(unittest.TestCase):
     ):
         """Test get_{{item | lower}} handles database exceptions."""
         mock_config = MagicMock()
-        mock_config.CREATE_COLLECTION_NAME = "{{item}}"
+        mock_config.{{ (item | upper) }}_COLLECTION_NAME = "{{item}}"
         mock_get_config.return_value = mock_config
 
         mock_mongo = MagicMock()

@@ -99,7 +99,7 @@ class {{item}}Service:
             
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
-            {{item | lower}}_id = mongo.create_document(config.CONTROL_COLLECTION_NAME, data)
+            {{item | lower}}_id = mongo.create_document(config.{{ (item | upper) }}_COLLECTION_NAME, data)
             logger.info(f"Created {{item | lower}} { {{item | lower}}_id} for user {token.get('user_id')}")
             return {{item | lower}}_id
         except HTTPForbidden:
@@ -138,7 +138,7 @@ class {{item}}Service:
             {{item}}Service._check_permission(token, 'read')
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
-            collection = mongo.get_collection(config.CONTROL_COLLECTION_NAME)
+            collection = mongo.get_collection(config.{{ (item | upper) }}_COLLECTION_NAME)
             result = execute_infinite_scroll_query(
                 collection,
                 name=name,
@@ -180,7 +180,7 @@ class {{item}}Service:
             
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
-            {{item | lower}} = mongo.get_document(config.CONTROL_COLLECTION_NAME, {{item | lower}}_id)
+            {{item | lower}} = mongo.get_document(config.{{ (item | upper) }}_COLLECTION_NAME, {{item | lower}}_id)
             if {{item | lower}} is None:
                 raise HTTPNotFound(f"{{item}} { {{item | lower}}_id} not found")
             
@@ -224,7 +224,7 @@ class {{item}}Service:
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
             updated = mongo.update_document(
-                config.CONTROL_COLLECTION_NAME,
+                config.{{ (item | upper) }}_COLLECTION_NAME,
                 document_id={{item | lower}}_id,
                 set_data=set_data
             )

@@ -20,7 +20,7 @@ requests = "*"
 
 [scripts]
 build = "python -m compileall -b -f -q src/"
-dev = "sh -c 'ENABLE_LOGIN=true PYTHONPATH=. python src/server.py'"
+dev = "sh -c 'ENABLE_LOGIN=true JWT_SECRET=dev-test PYTHONPATH=. python src/server.py'"
 test = "sh -c 'PYTHONPATH=. pytest test/ -v -m \"not e2e\"'"
 e2e = "sh -c 'PYTHONPATH=. pytest test/ -m e2e -v'"
 coverage = "sh -c 'PYTHONPATH=. pytest test/ -v -m \"not e2e\" --cov=src --cov-report=term-missing --cov-report=html'"

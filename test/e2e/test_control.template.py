@@ -8,13 +8,12 @@ To run these tests:
 1. Start the server: pipenv run dev (or pipenv run api for containerized)
 2. Run E2E tests: pipenv run e2e
 
-Override API base URL with API_URL env var (default: http://localhost:{{repo.port}})
+API runs on port {{repo.port}} (same for dev and api).
 """
-import os
 import pytest
 import requests
 
-BASE_URL = os.environ.get("API_URL", "http://localhost:{{repo.port}}")
+BASE_URL = "http://localhost:{{repo.port}}"
 
 
 def _err(response, expected):

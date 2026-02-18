@@ -78,7 +78,7 @@ class {{item}}Service:
             {{item}}Service._check_permission(token, 'read')
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
-            collection = mongo.get_collection(config.CONSUME_COLLECTION_NAME)
+            collection = mongo.get_collection(config.{{ (item | upper) }}_COLLECTION_NAME)
             result = execute_infinite_scroll_query(
                 collection,
                 name=name,
@@ -120,7 +120,7 @@ class {{item}}Service:
             
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
-            {{item | lower}} = mongo.get_document(config.CONSUME_COLLECTION_NAME, {{item | lower}}_id)
+            {{item | lower}} = mongo.get_document(config.{{ (item | upper) }}_COLLECTION_NAME, {{item | lower}}_id)
             if {{item | lower}} is None:
                 raise HTTPNotFound(f"{{item}} { {{item | lower}}_id} not found")
             
