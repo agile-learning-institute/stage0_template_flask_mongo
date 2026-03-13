@@ -67,7 +67,8 @@ templates:
     merge: true
 
   # GitHub Workflow, OpenAPI, and Server files
-  - path: "./.github/workflows/docker-push.yml"
+  - path: "./.github/workflows/docker-push.yml.template"
+    output: "./.github/workflows/docker-push.yml"
     merge: true
   - path: "./docs/openapi.yaml"
     merge: true
