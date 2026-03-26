@@ -19,7 +19,7 @@ info:
     name: Apache-2.0
 
 servers:
-  - url: http://localhost:8389
+  - url: http://localhost:8387
     description: Local development server
 
 tags:

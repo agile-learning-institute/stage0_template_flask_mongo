@@ -38,6 +38,6 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV ENABLE_LOGIN=true
 
-EXPOSE 8389
+EXPOSE 8387
 
-CMD exec python -m gunicorn --bind 0.0.0.0:8389 src.server:app
+CMD exec python -m gunicorn --bind 0.0.0.0:8387 src.server:app

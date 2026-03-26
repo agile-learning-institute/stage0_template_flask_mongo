@@ -8,12 +8,12 @@ To run these tests:
 1. Start the server: pipenv run dev (or pipenv run api for containerized)
 2. Run E2E tests: pipenv run e2e
 
-API runs on port 8389 (same for dev and api).
+API runs on port 8387 (same for dev and api).
 """
 import pytest
 import requests
 
-BASE_URL = "http://localhost:8389"
+BASE_URL = "http://localhost:8387"
 
 
 def _err(response, expected):
