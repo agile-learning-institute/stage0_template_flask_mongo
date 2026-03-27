@@ -147,6 +147,9 @@ templates:
       items: service.data_domains.consumes
       output: "./test/services/test_{{item | lower}}_service.py"
 
+  - path: "./test/e2e/e2e_auth.py"
+    merge: true
+
   # E2E tests for each data domain
   - path: "./test/e2e/test_control.template.py"
     mergeFor:

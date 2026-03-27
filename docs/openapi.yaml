@@ -5,12 +5,13 @@ info:
     A Flask + MongoDB API for the {{service.name}} service.
     
     ## Authentication
-    All endpoints (except `/dev-login` and `/metrics`) require JWT authentication via the `Authorization` header:
+    All endpoints (except `/metrics`) require JWT authentication via the `Authorization` header:
     ```
     Authorization: Bearer <token>
     ```
     
-    For local development, obtain a token from the `/dev-login` endpoint.
+    For local development, obtain a JWT from the Developer Edition welcome / IdP flow, or use a
+    test token from `test/e2e/e2e_auth.py` that matches your `JWT_SECRET` and expected claims.
   version: 0.1.0
   contact:
     name: {{org.name}}
@@ -23,8 +24,6 @@ servers:
     description: Local development server
 
 tags:
-  - name: Authentication
-    description: Development authentication endpoints
   - name: Config
     description: Configuration endpoints
   - name: Metrics
@@ -46,59 +45,6 @@ tags:
 {% endfor -%}
 
 paths:
-  /dev-login:
-    post:
-      tags:
-        - Authentication
-      summary: Get development JWT token
-      description: Issues a signed JWT for local/development environments
-      operationId: devLogin
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                subject:
-                  type: string
-                  description: User subject/ID
-                  default: dev-user-1
-                  example: dev-user-1
-                roles:
-                  type: array
-                  items:
-                    type: string
-                  description: User roles
-                  default: ["developer"]
-                  example: ["admin", "developer"]
-      responses:
-        '200':
-          description: Successfully issued JWT token
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  access_token:
-                    type: string
-                    description: JWT access token
-                  token_type:
-                    type: string
-                    example: bearer
-                  expires_at:
-                    type: string
-                    format: date-time
-                    description: Token expiration timestamp
-                  subject:
-                    type: string
-                    description: User subject
-                  roles:
-                    type: array
-                    items:
-                      type: string
-                    description: User roles
-
   /api/config:
     get:
       tags:
@@ -628,7 +574,7 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: |
-        JWT token obtained from `/dev-login` endpoint.
+        JWT issued by your identity provider (Developer Edition welcome flow for local dev).
         Include the token in the Authorization header: `Bearer <token>`
 
   parameters:

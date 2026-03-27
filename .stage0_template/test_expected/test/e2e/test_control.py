@@ -13,6 +13,8 @@ API runs on port 8387 (same for dev and api).
 import pytest
 import requests
 
+from .e2e_auth import get_auth_token
+
 BASE_URL = "http://localhost:8387"
 
 
@@ -22,23 +24,10 @@ def _err(response, expected):
     return f"Expected {expected}, got {response.status_code}. Response: {body}"
 
 
-def get_auth_token():
-    """Helper function to get an authentication token from dev-login."""
-    response = requests.post(
-        f"{BASE_URL}/dev-login",
-        json={"subject": "e2e-test-user", "roles": ["admin", "developer"]},
-    )
-    if response.status_code == 200:
-        return response.json()["access_token"]
-    return None
-
-
 @pytest.mark.e2e
 def test_create_control_endpoint():
     """Test POST /api/control endpoint and verify record persists in database."""
     token = get_auth_token()
-    assert token is not None, "Failed to get auth token"
-
     headers = {"Authorization": f"Bearer {token}"}
     data = {
         "name": "e2e-test-control",
@@ -59,8 +48,6 @@ def test_create_control_endpoint():
 def test_get_controls_endpoint():
     """Test GET /api/control endpoint."""
     token = get_auth_token()
-    assert token is not None, "Failed to get auth token"
-
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(f"{BASE_URL}/api/control", headers=headers)
     assert response.status_code == 200, _err(response, 200)
@@ -78,8 +65,6 @@ def test_get_controls_endpoint():
 def test_get_controls_with_name_filter():
     """Test GET /api/control with name query parameter."""
     token = get_auth_token()
-    assert token is not None, "Failed to get auth token"
-
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(f"{BASE_URL}/api/control?name=e2e", headers=headers)
     assert response.status_code == 200, _err(response, 200)

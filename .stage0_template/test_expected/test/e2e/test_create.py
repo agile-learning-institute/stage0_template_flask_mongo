@@ -13,6 +13,8 @@ API runs on port 8387 (same for dev and api).
 import pytest
 import requests
 
+from .e2e_auth import get_auth_token
+
 BASE_URL = "http://localhost:8387"
 
 
@@ -22,23 +24,10 @@ def _err(response, expected):
     return f"Expected {expected}, got {response.status_code}. Response: {body}"
 
 
-def get_auth_token():
-    """Helper function to get an authentication token from dev-login."""
-    response = requests.post(
-        f"{BASE_URL}/dev-login",
-        json={"subject": "e2e-test-user", "roles": ["admin", "developer"]},
-    )
-    if response.status_code == 200:
-        return response.json()["access_token"]
-    return None
-
-
 @pytest.mark.e2e
 def test_create_create_endpoint():
     """Test POST /api/create endpoint and basic retrieval by ID and search."""
     token = get_auth_token()
-    assert token is not None, "Failed to get auth token"
-
     headers = {"Authorization": f"Bearer {token}"}
     data = {
         "name": "e2e-test-create",
@@ -58,8 +47,6 @@ def test_create_create_endpoint():
 def test_get_creates_endpoint():
     """Test GET /api/create endpoint."""
     token = get_auth_token()
-    assert token is not None, "Failed to get auth token"
-
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(f"{BASE_URL}/api/create", headers=headers)
     assert response.status_code == 200, _err(response, 200)
@@ -77,8 +64,6 @@ def test_get_creates_endpoint():
 def test_get_create_not_found():
     """Test GET /api/create/<id> with non-existent ID."""
     token = get_auth_token()
-    assert token is not None, "Failed to get auth token"
-
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(
         f"{BASE_URL}/api/create/000000000000000000000000",

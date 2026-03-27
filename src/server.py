@@ -31,7 +31,6 @@ app.json = MongoJSONEncoder(app)
 # Route registration (all grouped together)
 from api_utils import (
     create_metric_routes,
-    create_dev_login_routes,
     create_config_routes,
     create_explorer_routes
 )
@@ -50,7 +49,6 @@ from src.routes.{{item | lower}}_routes import create_{{item | lower}}_routes
 docs_dir = os.path.join(os.path.dirname(__file__), '..', 'docs')
 app.register_blueprint(create_explorer_routes(docs_dir), url_prefix='/docs')
 app.register_blueprint(create_config_routes(), url_prefix='/api/config')
-app.register_blueprint(create_dev_login_routes(), url_prefix='/dev-login')
 {% for item in service.data_domains.controls -%}
 app.register_blueprint(create_{{item | lower}}_routes(), url_prefix='/api/{{item | lower}}')
 {% endfor -%}
@@ -64,7 +62,6 @@ metrics = create_metric_routes(app)  # This exposes /metrics endpoint
 
 logger.info("============= Routes Registered ===============")
 logger.info("  /api/config - Configuration endpoint")
-logger.info("  /dev-login - Dev Login (returns 404 if disabled)")
 {% for item in service.data_domains.controls -%}
 logger.info("  /api/{{item | lower}} - {{item}} domain endpoints")
 {% endfor -%}

@@ -7,8 +7,8 @@
 ## Developer Commands
 
 ```bash
-## Install dependencies
-pipenv install
+## Install dependencies (including dev: pytest, requests for E2E)
+pipenv install --dev
 
 # start backing db container 
 # Container Related commands use `de down` before starting the requested containers
@@ -61,12 +61,11 @@ pipenv run lint
 
 see the [Open API Specifications](./docs/openapi.yaml) for details on the API
 
+For E2E, use the static JWT in `test/e2e/e2e_auth.py` with `pipenv run dev` (matching `JWT_SECRET`).
+
 ### Simple Curl Commands:
 ```bash
-# Get a token
-export TOKEN=$(curl -s -X POST http://localhost:{{repo.port}}/dev-login \
-  -H "Content-Type: application/json" \
-  -d '{"subject": "user-123", "roles": ["admin"]}' | jq -r '.access_token')
+# Bearer token from welcome IdP, or: export TOKEN="$(python -c 'from test.e2e.e2e_auth import E2E_ACCESS_TOKEN; print(E2E_ACCESS_TOKEN)')"
 
 # Get the API Configuration
 curl http://localhost:{{repo.port}}/api/config \

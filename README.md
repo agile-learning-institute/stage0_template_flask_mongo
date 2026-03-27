@@ -9,8 +9,8 @@ This is a Flask + MongoDB API template that demonstrates the {{info.name}} archi
 ## Developer Commands
 
 ```bash
-## Install dependencies
-pipenv install
+## Install dependencies (including dev: pytest, requests for E2E)
+pipenv install --dev
 
 # start backing db container 
 # Container Related commands use `de down` before starting the requested containers
@@ -80,18 +80,18 @@ List endpoints (`GET /api/control`, `GET /api/create`, `GET /api/consume`) use s
 
 ### Common Endpoints
 - `GET /docs` - API Explorer (OpenAPI/Swagger documentation)
-- `POST /dev-login` - Development JWT token issuance (only enabled with `ENABLE_LOGIN=true`)
 - `GET /api/config` - Configuration endpoint
 - `GET /metrics` - Prometheus metrics
 
 See the [project swagger](./docs/openapi.yaml) for detailed endpoint information.
 
+Local JWTs come from the Developer Edition welcome / IdP flow, not from this API. For automated E2E,
+use the static token in `test/e2e/e2e_auth.py` (`E2E_ACCESS_TOKEN`) with `pipenv run dev` (same default
+`JWT_SECRET` as in `Pipfile`).
+
 ### Simple Curl Commands:
 ```bash
-# Get a token
-export TOKEN=$(curl -s -X POST http://localhost:8184/dev-login \
-  -H "Content-Type: application/json" \
-  -d '{"subject": "user-123", "roles": ["admin"]}' | jq -r '.access_token')
+# Bearer token: export from welcome flow, or: export TOKEN="$(python -c 'from test.e2e.e2e_auth import E2E_ACCESS_TOKEN; print(E2E_ACCESS_TOKEN)')"
 
 # Control endpoints
 curl http://localhost:8184/api/control \

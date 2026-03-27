@@ -82,11 +82,10 @@ class TestAppConfiguration(unittest.TestCase):
         # Should not get 404 (route exists), but may get 401 (auth required)
         self.assertIn(response.status_code, [200, 401, 500])
     
-    def test_dev_login_route_registered(self):
-        """Test that /dev-login route is registered."""
+    def test_dev_login_not_exposed(self):
+        """Per-service /dev-login is not registered (use umbrella welcome / IdP for dev JWT)."""
         response = self.client.post('/dev-login')
-        # Should not get 404 (route exists)
-        self.assertNotEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 404)
 {% for item in service.data_domains.controls %}
     def test_{{item | lower}}_routes_registered(self):
         """Test that /api/{{item | lower}} routes are registered."""
@@ -141,7 +140,7 @@ class TestAppConfiguration(unittest.TestCase):
         # Check for key routes
         self.assertTrue(any('/docs' in rule for rule in rules))
         self.assertTrue(any('/api/config' in rule for rule in rules))
-        self.assertTrue(any('/dev-login' in rule for rule in rules))
+        self.assertFalse(any('/dev-login' in rule for rule in rules))
 {% for item in service.data_domains.controls %}
         self.assertTrue(any('/api/{{item | lower}}' in rule for rule in rules))
 {% endfor %}

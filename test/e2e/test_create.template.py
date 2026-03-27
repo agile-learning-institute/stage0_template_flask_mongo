@@ -13,6 +13,8 @@ API runs on port {{repo.port}} (same for dev and api).
 import pytest
 import requests
 
+from .e2e_auth import get_auth_token
+
 BASE_URL = "http://localhost:{{repo.port}}"
 
 
@@ -22,23 +24,10 @@ def _err(response, expected):
     return f"Expected {expected}, got {response.status_code}. Response: {body}"
 
 
-def get_auth_token():
-    """Helper function to get an authentication token from dev-login."""
-    response = requests.post(
-        f"{BASE_URL}/dev-login",
-        json={"subject": "e2e-test-user", "roles": ["admin", "developer"]},
-    )
-    if response.status_code == 200:
-        return response.json()["access_token"]
-    return None
-
-
 @pytest.mark.e2e
 def test_create_{{item | lower}}_endpoint():
     """Test POST /api/{{item | lower}} endpoint and basic retrieval by ID and search."""
     token = get_auth_token()
-    assert token is not None, "Failed to get auth token"
-
     headers = {"Authorization": f"Bearer {token}"}
     data = {
         "name": "e2e-test-{{item | lower}}",
@@ -58,8 +47,6 @@ def test_create_{{item | lower}}_endpoint():
 def test_get_{{item | lower}}s_endpoint():
     """Test GET /api/{{item | lower}} endpoint."""
     token = get_auth_token()
-    assert token is not None, "Failed to get auth token"
-
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(f"{BASE_URL}/api/{{item | lower}}", headers=headers)
     assert response.status_code == 200, _err(response, 200)
@@ -77,8 +64,6 @@ def test_get_{{item | lower}}s_endpoint():
 def test_get_{{item | lower}}_not_found():
     """Test GET /api/{{item | lower}}/<id> with non-existent ID."""
     token = get_auth_token()
-    assert token is not None, "Failed to get auth token"
-
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(
         f"{BASE_URL}/api/{{item | lower}}/000000000000000000000000",
