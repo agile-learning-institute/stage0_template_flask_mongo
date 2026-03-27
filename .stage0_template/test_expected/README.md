@@ -1,4 +1,4 @@
-# Sample API
+# Mentor Hub — Sample API
 
 ## Prerequisites
 - Mentor Hub [Developers Edition](https://github.com/agile-learning-institute/mentorhub/blob/main/CONTRIBUTING.md)

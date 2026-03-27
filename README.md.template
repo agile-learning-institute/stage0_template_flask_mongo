@@ -1,4 +1,4 @@
-# Sample API
+# {{ info.name }} — {{ service.name | replace('_', ' ') | title }} API
 
 ## Prerequisites
 - {{info.name}} [Developers Edition]({{org.git_host}}/{{org.git_org}}/{{info.slug}}/blob/main/CONTRIBUTING.md)
