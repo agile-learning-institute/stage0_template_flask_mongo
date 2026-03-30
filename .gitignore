@@ -50,3 +50,13 @@ htmlcov/
 
 # Build artifacts
 BUILT_AT
+
+# Stage0 templates: dependency lockfiles are not part of the template (generate in consumer repos).
+Pipfile.lock
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+poetry.lock
+pdm.lock
+uv.lock
+
