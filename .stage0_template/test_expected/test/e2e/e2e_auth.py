@@ -1,14 +1,43 @@
-"""Static bearer JWT for E2E tests.
+"""E2E Bearer JWT aligned with the umbrella welcome page (``mentorhub/index.html``) persona tokens (TOKEN_ADAM).
 
-Must match ``JWT_SECRET`` used when running the API locally (template ``pipenv run dev`` uses
-``mentorhub-local-dev-jwt-secret-fixed``). Claims: iss ``dev-idp``, aud ``dev-api``; subject
-``adam`` with role ``admin``.
+Uses ``JWT_SECRET``, ``JWT_ISSUER``, ``JWT_AUDIENCE``, and ``JWT_ALGORITHM`` from the
+environment when set (``pipenv run e2e`` exports the Developer Edition defaults). Override
+those variables to match a non-default API stack (same values the container / compose uses).
 """
 
-E2E_ACCESS_TOKEN = (
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkZXYtaWRwIiwiYXVkIjoiZGV2LWFwaSIsInN1YiI6ImFkYW0iLCJpYXQiOjE3NzQ1NTMwNTEsImV4cCI6MjA4OTkxMzA1MSwicm9sZXMiOlsiYWRtaW4iXX0.JqJywkxLUoOvbE5SAzEdV3Ia87vDZCuDZXTGFYfmY7c"
-)
+from __future__ import annotations
+
+import os
+import time
+
+import jwt
+
+# Defaults match mentorhub/index.html (HS256, iss dev-idp, aud dev-api) and Pipfile dev/e2e.
+_DEFAULT_JWT_SECRET = "mentorhub-local-dev-jwt-secret-fixed"
+_DEFAULT_JWT_ISSUER = "dev-idp"
+_DEFAULT_JWT_AUDIENCE = "dev-api"
+_DEFAULT_JWT_ALGORITHM = "HS256"
+
+_E2E_SUBJECT = "adam"
+_E2E_ROLES = ("admin",)
 
 
 def get_auth_token() -> str:
-    return E2E_ACCESS_TOKEN
+    """Mint a short-lived admin persona JWT for black-box tests."""
+    secret = os.environ.get("JWT_SECRET") or _DEFAULT_JWT_SECRET
+    issuer = os.environ.get("JWT_ISSUER") or _DEFAULT_JWT_ISSUER
+    audience = os.environ.get("JWT_AUDIENCE") or _DEFAULT_JWT_AUDIENCE
+    algorithm = os.environ.get("JWT_ALGORITHM") or _DEFAULT_JWT_ALGORITHM
+    now = int(time.time())
+    payload = {
+        "iss": issuer,
+        "aud": audience,
+        "sub": _E2E_SUBJECT,
+        "iat": now,
+        "exp": now + 10 * 365 * 24 * 60 * 60,
+        "roles": list(_E2E_ROLES),
+    }
+    token = jwt.encode(payload, secret, algorithm=algorithm)
+    if isinstance(token, bytes):
+        return token.decode("ascii")
+    return token
