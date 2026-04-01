@@ -7,6 +7,7 @@ name = "pypi"
 flask = "*"
 pymongo = "*"
 pyjwt = "*"
+# Must be git: PyPI "api-utils" is unrelated; "*" breaks the API.
 api-utils = {editable = false, git = "https://github.com/agile-learning-institute/mentorhub_api_utils.git", ref = "main"}
 
 [dev-packages]

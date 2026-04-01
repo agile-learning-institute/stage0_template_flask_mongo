@@ -7,6 +7,7 @@ name = "pypi"
 flask = "*"
 pymongo = "*"
 pyjwt = "*"
+# Must be git: PyPI package "api-utils" is unrelated; using "*" pulls the wrong library and breaks Config/auth.
 api-utils = {editable = false, git = "{{org.git_host}}/{{org.git_org}}/{{info.slug}}_api_utils.git", ref = "main"}
 
 [dev-packages]
